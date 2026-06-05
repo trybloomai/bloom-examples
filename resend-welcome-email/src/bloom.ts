@@ -1,6 +1,6 @@
 import type { AppConfig } from "./config";
 
-export type GeneratedImage = {
+export type CompletedImage = {
   generationId: string;
   imageUrl: string;
 };
@@ -59,7 +59,7 @@ export async function generateImage(prompt: string, config: AppConfig): Promise<
   return generationId;
 }
 
-export async function waitForImage(generationId: string, config: AppConfig): Promise<GeneratedImage> {
+export async function waitForImage(generationId: string, config: AppConfig): Promise<CompletedImage> {
   const timeoutSeconds = Math.max(1, Math.ceil(config.bloomTimeoutMs / 1000));
   const json = await bloomFetch<BloomGetImageResponse>(
     config,
@@ -84,10 +84,7 @@ export async function waitForImage(generationId: string, config: AppConfig): Pro
 }
 
 export async function fetchImageBuffer(imageUrl: string, config: AppConfig): Promise<Buffer> {
-  const url = parseDownloadUrl(imageUrl);
-  const headers = shouldSendApiKey(url, config) ? { "x-api-key": config.bloomApiKey } : undefined;
-  const response = await fetch(url, {
-    headers,
+  const response = await fetch(imageUrl, {
     signal: AbortSignal.timeout(IMAGE_FETCH_TIMEOUT_MS),
     redirect: "follow",
   });
@@ -101,7 +98,11 @@ export async function fetchImageBuffer(imageUrl: string, config: AppConfig): Pro
     throw new Error(`Bloom image is too large to attach: ${declaredLength} bytes.`);
   }
 
-  return readBoundedBuffer(response, MAX_IMAGE_BYTES);
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.byteLength > MAX_IMAGE_BYTES) {
+    throw new Error(`Bloom image is too large to attach: ${buffer.byteLength} bytes.`);
+  }
+  return buffer;
 }
 
 async function bloomFetch<T>(
@@ -133,26 +134,6 @@ function toBloomUrl(apiUrl: string, path: string): string {
   return new URL(path, base).toString();
 }
 
-function parseDownloadUrl(imageUrl: string): URL {
-  let url: URL;
-  try {
-    url = new URL(imageUrl);
-  } catch {
-    throw new Error(`Bloom returned an invalid image URL: ${imageUrl}`);
-  }
-
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
-    throw new Error(`Bloom image URL must use http or https. Received: ${imageUrl}`);
-  }
-
-  return url;
-}
-
-function shouldSendApiKey(imageUrl: URL, config: AppConfig): boolean {
-  const apiHost = new URL(config.bloomApiUrl).hostname;
-  return imageUrl.hostname === apiHost || imageUrl.hostname === "trybloom.ai" || imageUrl.hostname.endsWith(".trybloom.ai");
-}
-
 async function readJson(response: Response): Promise<unknown> {
   const text = await response.text();
   if (!text) {
@@ -172,35 +153,3 @@ function formatBloomError(response: Response, json: BloomErrorResponse): string 
   const detail = code || message ? `${code ?? "ERROR"}: ${message ?? response.statusText}` : response.statusText;
   return `Bloom API request failed (${response.status}): ${detail}`;
 }
-
-async function readBoundedBuffer(response: Response, maxBytes: number): Promise<Buffer> {
-  if (!response.body) {
-    const buffer = Buffer.from(await response.arrayBuffer());
-    if (buffer.byteLength > maxBytes) {
-      throw new Error(`Bloom image is too large to attach: ${buffer.byteLength} bytes.`);
-    }
-    return buffer;
-  }
-
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let received = 0;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-
-    received += value.byteLength;
-    if (received > maxBytes) {
-      await reader.cancel();
-      throw new Error(`Bloom image is too large to attach: streamed more than ${maxBytes} bytes.`);
-    }
-
-    chunks.push(value);
-  }
-
-  return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)));
-}
-

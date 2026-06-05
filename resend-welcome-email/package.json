@@ -9,8 +9,7 @@
   "scripts": {
     "trigger": "tsx triggers/mock.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test test/*.test.ts",
-    "email": "email dev --dir src/emails"
+    "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@react-email/components": "^1.0.1",
@@ -21,7 +20,6 @@
   "devDependencies": {
     "@types/node": "^20.19.25",
     "@types/react": "^19.2.6",
-    "react-email": "^6.5.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.3"
   }

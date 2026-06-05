@@ -2,32 +2,23 @@
 
 Generate a personalized welcome hero with Bloom and send it as an inline image through Resend.
 
-The example is built around one stable hook:
+```text
+signup trigger -> runWelcomeFlow(event) -> Bloom image -> Resend email
+```
+
+Bloom renders the recipient name inside the generated image. The email layout stays brand-agnostic; the brand expression lives in the Bloom output.
+
+## The Only Function You Call
 
 ```ts
 await runWelcomeFlow({
-  id: "user.created_123",
   name: "Maria",
   email: "maria@example.com",
   plan: "Pro",
 });
 ```
 
-Flow:
-
-```text
-trigger -> runWelcomeFlow(event) -> Bloom image generation -> inline CID attachment -> Resend email
-```
-
-Bloom renders the recipient name inside the generated image. The email layout stays brand-agnostic; the brand expression lives in the Bloom output.
-
-## Requirements
-
-- Node 18 or newer
-- A Bloom API key
-- A Bloom `brandSessionId` for an onboarded brand
-- A Resend API key
-- For Resend sandbox mode, `TEST_EMAIL` must be an address registered in Resend
+Add any extra event fields you want Bloom to consider. `email` and `id` are never injected into the prompt; extra fields are sanitized before they reach Bloom.
 
 ## Setup
 
@@ -36,10 +27,9 @@ npx degit trybloomai/bloom-examples/resend-welcome-email resend-welcome-email
 cd resend-welcome-email
 npm install
 cp .env.example .env
-npm run trigger
 ```
 
-Fill `.env` before running the trigger.
+Fill `.env`:
 
 ```env
 BLOOM_API_KEY=bloom_sk_...
@@ -48,24 +38,26 @@ RESEND_API_KEY=re_...
 TEST_EMAIL=you@example.com
 ```
 
-Optional values:
+Then run:
 
-```env
-BLOOM_API_URL=https://www.trybloom.ai/api/v1
-BLOOM_ASPECT_RATIO=16:9
-BLOOM_TIMEOUT_MS=120000
-FROM_EMAIL=onboarding@resend.dev
-EMAIL_SUBJECT=Welcome!
-TEST_NAME=Maria
-TEST_EVENT_ID=
-EXTRA_CONTEXT=
+```bash
+npm run trigger
 ```
 
-### Extra Context
+`npm run trigger` calls external services and sends a real email. The CLI prints readable progress for validation, Bloom generation, image download, and Resend delivery. The final summary masks the recipient and never prints API keys.
 
-`EXTRA_CONTEXT` is a simple string used only by the mock trigger. It becomes one extra event field named `signupContext`, and `buildPrompt(event)` injects it into the Bloom prompt after sanitizing it.
+The email includes a unique `X-Entity-Ref-ID` header so repeated test sends do not collapse into one Gmail thread.
 
-Use it for small bits of signup context that should influence the hero image:
+## Required Accounts
+
+- Bloom API key
+- Bloom `brandSessionId` for an onboarded brand
+- Resend API key
+- For Resend sandbox mode, a `TEST_EMAIL` registered in Resend
+
+## Extra Context
+
+`EXTRA_CONTEXT` is optional and only used by the mock trigger. It is a plain string, not JSON.
 
 ```env
 EXTRA_CONTEXT=Signed up after reading the pricing page.
@@ -77,7 +69,7 @@ or:
 EXTRA_CONTEXT=Plan: Pro; signup source: webinar; use case: launching weekly campaigns.
 ```
 
-You do not need JSON in `.env`. For structured data in a real integration, pass fields directly to `runWelcomeFlow`:
+In a real integration, pass structured fields directly:
 
 ```ts
 await runWelcomeFlow({
@@ -89,29 +81,14 @@ await runWelcomeFlow({
 });
 ```
 
-`email` and `id` are never injected into the prompt. Extra fields are included, so avoid sending unnecessary PII.
+## Swap In Your Stack
 
-### Mock Event Id
+There are two integration points:
 
-The mock trigger generates a fresh `event.id` by default so you can run `npm run trigger` repeatedly while testing.
+1. Replace `triggers/mock.ts` with your real webhook, queue worker, cron job, or signup event.
+2. Replace `src/emails/welcome-email.tsx` if you already have your own email template.
 
-Set `TEST_EVENT_ID` only when you want to test idempotency behavior:
-
-```env
-TEST_EVENT_ID=user.created_123
-```
-
-Resend idempotency keys are strict. Reusing the same `TEST_EVENT_ID` with a different email body within 24 hours can be rejected by Resend.
-
-## API Keys
-
-Get your Resend API key from the Resend dashboard. In sandbox mode, send only to a verified test address. In production, replace `FROM_EMAIL` with an address on a verified domain.
-
-Get your Bloom API key and `brandSessionId` from Bloom. The brand must already be onboarded and ready to generate.
-
-## Replace The Trigger
-
-`triggers/mock.ts` is intentionally small. Replace it with your webhook, queue worker, or product event handler and keep calling `runWelcomeFlow(event)`.
+Keep `runWelcomeFlow(event)` as the boundary. It validates the event, builds the sanitized prompt, asks Bloom for the image, downloads it, and sends the email.
 
 Example route handler:
 
@@ -133,6 +110,39 @@ export async function POST(request: Request) {
 ```
 
 Pass a stable `event.id` when you have one. Resend receives it as the idempotency key. In production, also dedupe that event id in your own store before generating the image.
+
+`event.id` is also used for the hidden `X-Entity-Ref-ID` email header, which helps Gmail keep repeated transactional sends as separate conversations. If there is no `event.id`, the example generates a fresh value.
+
+## Point Your Agent At This
+
+Copy this example into your project and let your coding agent wire it up:
+
+```text
+Integrate trybloomai/bloom-examples/resend-welcome-email into my app.
+Replace triggers/mock.ts with my real webhook, queue worker, or signup event.
+Call runWelcomeFlow({ name, email, plan }) from that trigger.
+Keep the runWelcomeFlow contract stable and do not touch src/prompt.ts sanitization.
+Keep my existing email-sending setup if I already have one.
+```
+
+Works with Claude Code, Cursor, or any coding agent with repo access.
+
+## Advanced Environment
+
+Keep `.env.example` to the four required values. Add these only when you need them:
+
+```env
+BLOOM_API_URL=https://www.trybloom.ai/api/v1
+BLOOM_ASPECT_RATIO=16:9
+BLOOM_TIMEOUT_MS=120000
+FROM_EMAIL=onboarding@resend.dev
+EMAIL_SUBJECT=Welcome!
+TEST_NAME=Maria
+TEST_EVENT_ID=
+EXTRA_CONTEXT=
+```
+
+`TEST_EVENT_ID` is only for testing idempotency. The mock trigger generates a fresh event id by default so repeated test runs do not collide in Resend.
 
 ## Production Notes
 
@@ -159,5 +169,3 @@ npm run typecheck
 npm run test
 npm run trigger
 ```
-
-`npm run trigger` calls external services and sends a real email. While it runs, the CLI prints readable progress for validation, Bloom generation, waiting, image download, and Resend delivery. During the Bloom wait it prints a short update every 10 seconds. The final summary masks the recipient and never prints API keys.

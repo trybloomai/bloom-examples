@@ -1,8 +1,9 @@
+import { randomUUID } from "node:crypto";
 import React from "react";
 import { Resend } from "resend";
 
 import { fetchImageBuffer, generateImage, waitForImage } from "./bloom";
-import { getConfig } from "./config";
+import { getAppConfig } from "./config";
 import { WelcomeEmail } from "./emails/welcome-email";
 import { buildPrompt, type WelcomeEvent } from "./prompt";
 
@@ -37,7 +38,7 @@ export async function runWelcomeFlow(
   });
   validateWelcomeEvent(event);
 
-  const config = getConfig();
+  const config = getAppConfig();
   const prompt = buildPrompt(event);
   options.onProgress?.({
     step: "generating",
@@ -69,6 +70,9 @@ export async function runWelcomeFlow(
       from: config.fromEmail,
       to: event.email,
       subject: config.emailSubject,
+      headers: {
+        "X-Entity-Ref-ID": event.id ?? randomUUID(),
+      },
       react: React.createElement(WelcomeEmail, {
         name: event.name,
         imageCid: IMAGE_CID,
