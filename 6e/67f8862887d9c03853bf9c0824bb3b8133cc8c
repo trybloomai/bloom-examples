@@ -1,0 +1,21 @@
+resend-welcome-email/triggers/mock.ts
+  s_d11804d97394b5::t_a6cdd172844254 44,49,51-52,56-58,61-66,69-71,74-76,79-80,84-87,89-91,94-95,104-108
+resend-welcome-email/README.md
+  s_d11804d97394b5::t_4160df966f4cd5 163
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "6e67f8862887d9c03853bf9c0824bb3b8133cc8c",
+  "prompts": {},
+  "sessions": {
+    "s_d11804d97394b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e99ff-052e-7973-b64a-2813bacda171",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
