@@ -1,0 +1,38 @@
+resend-welcome-email/triggers/mock.ts
+  s_d11804d97394b5::t_eeece183d9a90d 16
+  s_d11804d97394b5::t_62bad61582cc5d 3,7-12,24,26-28,38
+  s_d11804d97394b5::t_169495a9bc05c5 4-6,13,17,25,29-34
+resend-welcome-email/src/bloom.ts
+  s_d11804d97394b5::t_d585d0d326601e 3,62
+  s_d11804d97394b5::t_eeece183d9a90d 87,101-105
+resend-welcome-email/README.md
+  s_d11804d97394b5::t_d585d0d326601e 5-11,21,32,41,43-44,47,51,53-56,58-60,72,84,86,88-89,91,115-146
+  s_d11804d97394b5::t_6ffa8280bb9f22 49-50,114
+resend-welcome-email/src/config.ts
+  s_d11804d97394b5::t_eeece183d9a90d 7,21-22,24,26,28-29,34,36-37,47-53
+resend-welcome-email/src/welcome-flow.ts
+  s_d11804d97394b5::t_6ffa8280bb9f22 1,73-75
+  s_d11804d97394b5::t_eeece183d9a90d 6,41
+resend-welcome-email/package.json
+  s_d11804d97394b5::t_d585d0d326601e 12
+resend-welcome-email/.env.example
+  s_d11804d97394b5::t_eeece183d9a90d 6
+README.md
+  s_d11804d97394b5::t_d585d0d326601e 5-14,19-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "c9fbe19867fa14ac8fccab40d51a1930feed3b95",
+  "prompts": {},
+  "sessions": {
+    "s_d11804d97394b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e99ff-052e-7973-b64a-2813bacda171",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
