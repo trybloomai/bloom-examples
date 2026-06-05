@@ -1,0 +1,28 @@
+{
+  "name": "resend-welcome-email",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "trigger": "tsx triggers/mock.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "email": "email dev --dir src/emails"
+  },
+  "dependencies": {
+    "@react-email/components": "^1.0.1",
+    "dotenv": "^17.2.2",
+    "react": "^19.2.4",
+    "resend": "^6.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.25",
+    "@types/react": "^19.2.6",
+    "react-email": "^6.5.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.3"
+  }
+}
