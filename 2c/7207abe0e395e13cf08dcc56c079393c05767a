@@ -1,0 +1,31 @@
+resend-welcome-email/src/config.ts
+  s_d11804d97394b5::t_caf08e6b769128 32,79
+resend-welcome-email/README.md
+  s_d11804d97394b5::t_caf08e6b769128 60,93-104
+  s_d11804d97394b5::t_500a51b155c9ab 64-92,105,163
+resend-welcome-email/src/welcome-flow.ts
+  s_d11804d97394b5::t_500a51b155c9ab 18-37,42-45,47-51,53-58,61-65,96-103
+resend-welcome-email/.env.example
+  s_d11804d97394b5::t_caf08e6b769128 14
+  s_d11804d97394b5::t_500a51b155c9ab 16-20
+resend-welcome-email/triggers/mock.ts
+  s_d11804d97394b5::t_500a51b155c9ab 4,9,44-78,92-116
+  s_d11804d97394b5::t_7743a9f4f0517e 17-26,79-91
+  s_d11804d97394b5::t_caf08e6b769128 1-2,11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "2c7207abe0e395e13cf08dcc56c079393c05767a",
+  "prompts": {},
+  "sessions": {
+    "s_d11804d97394b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e99ff-052e-7973-b64a-2813bacda171",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
