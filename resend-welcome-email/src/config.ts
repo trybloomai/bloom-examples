@@ -29,6 +29,7 @@ export type AppConfig = {
 export type MockConfig = {
   testEmail: string;
   testName: string;
+  testEventId?: string;
   extraContext?: string;
 };
 
@@ -75,6 +76,7 @@ export function getConfig(options: ConfigOptions = {}): AppConfig | (AppConfig &
     ...appConfig,
     testEmail: requiredEnv("TEST_EMAIL"),
     testName: env("TEST_NAME") || "Maria",
+    testEventId: env("TEST_EVENT_ID"),
     extraContext: env("EXTRA_CONTEXT") || undefined,
   };
 }
@@ -127,4 +129,3 @@ function parseHttpUrl(value: string, key: string): string {
 
   return url.toString().replace(/\/$/, "");
 }
-

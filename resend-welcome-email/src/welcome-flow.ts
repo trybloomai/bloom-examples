@@ -15,15 +15,54 @@ export type WelcomeFlowResult = {
   emailId: string;
 };
 
-export async function runWelcomeFlow(event: WelcomeEvent): Promise<WelcomeFlowResult> {
+export type WelcomeFlowProgress =
+  | { step: "validating"; message: string }
+  | { step: "generating"; message: string }
+  | { step: "waiting"; message: string; generationId: string }
+  | { step: "downloading"; message: string; generationId: string; imageUrl: string }
+  | { step: "sending"; message: string; generationId: string }
+  | { step: "sent"; message: string; generationId: string; imageUrl: string; emailId: string };
+
+export type WelcomeFlowOptions = {
+  onProgress?: (progress: WelcomeFlowProgress) => void;
+};
+
+export async function runWelcomeFlow(
+  event: WelcomeEvent,
+  options: WelcomeFlowOptions = {}
+): Promise<WelcomeFlowResult> {
+  options.onProgress?.({
+    step: "validating",
+    message: "Validating welcome event",
+  });
   validateWelcomeEvent(event);
 
   const config = getConfig();
   const prompt = buildPrompt(event);
+  options.onProgress?.({
+    step: "generating",
+    message: "Starting Bloom image generation",
+  });
   const generationId = await generateImage(prompt, config);
+  options.onProgress?.({
+    step: "waiting",
+    message: "Waiting for Bloom to finish the image",
+    generationId,
+  });
   const { imageUrl } = await waitForImage(generationId, config);
+  options.onProgress?.({
+    step: "downloading",
+    message: "Downloading generated image",
+    generationId,
+    imageUrl,
+  });
   const imageBuffer = await fetchImageBuffer(imageUrl, config);
 
+  options.onProgress?.({
+    step: "sending",
+    message: "Sending email with Resend",
+    generationId,
+  });
   const resend = new Resend(config.resendApiKey);
   const result = await resend.emails.send(
     {
@@ -54,6 +93,14 @@ export async function runWelcomeFlow(event: WelcomeEvent): Promise<WelcomeFlowRe
     throw new Error("Resend did not return an email id.");
   }
 
+  options.onProgress?.({
+    step: "sent",
+    message: "Email sent",
+    generationId,
+    imageUrl,
+    emailId: result.data.id,
+  });
+
   return {
     brandSessionId: config.bloomBrandSessionId,
     generationId,
@@ -75,4 +122,3 @@ function validateWelcomeEvent(event: WelcomeEvent): void {
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
-

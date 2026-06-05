@@ -57,8 +57,51 @@ BLOOM_TIMEOUT_MS=120000
 FROM_EMAIL=onboarding@resend.dev
 EMAIL_SUBJECT=Welcome!
 TEST_NAME=Maria
+TEST_EVENT_ID=
 EXTRA_CONTEXT=
 ```
+
+### Extra Context
+
+`EXTRA_CONTEXT` is a simple string used only by the mock trigger. It becomes one extra event field named `signupContext`, and `buildPrompt(event)` injects it into the Bloom prompt after sanitizing it.
+
+Use it for small bits of signup context that should influence the hero image:
+
+```env
+EXTRA_CONTEXT=Signed up after reading the pricing page.
+```
+
+or:
+
+```env
+EXTRA_CONTEXT=Plan: Pro; signup source: webinar; use case: launching weekly campaigns.
+```
+
+You do not need JSON in `.env`. For structured data in a real integration, pass fields directly to `runWelcomeFlow`:
+
+```ts
+await runWelcomeFlow({
+  id: payload.id,
+  name: payload.user.name,
+  email: payload.user.email,
+  plan: payload.user.plan,
+  signupSource: payload.source,
+});
+```
+
+`email` and `id` are never injected into the prompt. Extra fields are included, so avoid sending unnecessary PII.
+
+### Mock Event Id
+
+The mock trigger generates a fresh `event.id` by default so you can run `npm run trigger` repeatedly while testing.
+
+Set `TEST_EVENT_ID` only when you want to test idempotency behavior:
+
+```env
+TEST_EVENT_ID=user.created_123
+```
+
+Resend idempotency keys are strict. Reusing the same `TEST_EVENT_ID` with a different email body within 24 hours can be rejected by Resend.
 
 ## API Keys
 
@@ -117,5 +160,4 @@ npm run test
 npm run trigger
 ```
 
-`npm run trigger` calls external services and sends a real email. The summary masks the recipient and never prints API keys.
-
+`npm run trigger` calls external services and sends a real email. While it runs, the CLI prints progress for validation, Bloom generation, waiting, image download, and Resend delivery. The final summary masks the recipient and never prints API keys.
