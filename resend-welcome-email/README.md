@@ -36,6 +36,7 @@ BLOOM_API_KEY=bloom_sk_...
 BLOOM_BRAND_SESSION_ID=...
 RESEND_API_KEY=re_...
 TEST_EMAIL=you@example.com
+TEST_NAME=Maria
 ```
 
 Then run:
@@ -54,6 +55,7 @@ The email includes a unique `X-Entity-Ref-ID` header so repeated test sends do n
 - Bloom `brandSessionId` for an onboarded brand
 - Resend API key
 - For Resend sandbox mode, a `TEST_EMAIL` registered in Resend
+- A `TEST_NAME` to render into the generated image
 
 ## Extra Context
 
@@ -129,7 +131,7 @@ Works with Claude Code, Cursor, or any coding agent with repo access.
 
 ## Advanced Environment
 
-Keep `.env.example` to the four required values. Add these only when you need them:
+Keep `.env.example` to the required values. Add these only when you need them:
 
 ```env
 BLOOM_API_URL=https://www.trybloom.ai/api/v1
@@ -137,7 +139,6 @@ BLOOM_ASPECT_RATIO=16:9
 BLOOM_TIMEOUT_MS=120000
 FROM_EMAIL=onboarding@resend.dev
 EMAIL_SUBJECT=Welcome!
-TEST_NAME=Maria
 TEST_EVENT_ID=
 EXTRA_CONTEXT=
 ```

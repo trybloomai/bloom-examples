@@ -34,11 +34,11 @@ export function getAppConfig(): AppConfig {
 }
 
 export function getMockConfig(): MockConfig {
-  requireEnv(["TEST_EMAIL"]);
+  requireEnv(["TEST_EMAIL", "TEST_NAME"]);
 
   return {
     testEmail: requiredEnv("TEST_EMAIL"),
-    testName: env("TEST_NAME") || "Maria",
+    testName: requiredEnv("TEST_NAME"),
     testEventId: env("TEST_EVENT_ID"),
     extraContext: env("EXTRA_CONTEXT") || undefined,
   };
