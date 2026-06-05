@@ -1,0 +1,48 @@
+resend-welcome-email/.gitignore
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-5
+resend-welcome-email/src/welcome-flow.ts
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-78
+resend-welcome-email/README.md
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-121
+resend-welcome-email/tsconfig.json
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-16
+resend-welcome-email/src/prompt.ts
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-97
+resend-welcome-email/triggers/mock.ts
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-47
+resend-welcome-email/.nvmrc
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-2
+resend-welcome-email/src/bloom.ts
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-206
+.gitignore
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-5
+resend-welcome-email/test/prompt.test.ts
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-53
+README.md
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-8
+resend-welcome-email/.env.example
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-15
+resend-welcome-email/package.json
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-23,25-28
+  s_d11804d97394b5::t_cc2adc2ab2c201 24
+resend-welcome-email/src/emails/welcome-email.tsx
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-65
+resend-welcome-email/src/config.ts
+  s_d11804d97394b5::t_cfcad470cbe5f0 1-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "09fcbdc278a65d2fcac2ea3adfd9a07ba4ceca52",
+  "prompts": {},
+  "sessions": {
+    "s_d11804d97394b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e99ff-052e-7973-b64a-2813bacda171",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
