@@ -160,4 +160,4 @@ npm run test
 npm run trigger
 ```
 
-`npm run trigger` calls external services and sends a real email. While it runs, the CLI prints progress for validation, Bloom generation, waiting, image download, and Resend delivery. The final summary masks the recipient and never prints API keys.
+`npm run trigger` calls external services and sends a real email. While it runs, the CLI prints readable progress for validation, Bloom generation, waiting, image download, and Resend delivery. During the Bloom wait it prints a short update every 10 seconds. The final summary masks the recipient and never prints API keys.

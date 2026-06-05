@@ -30,8 +30,6 @@ async function main() {
       {
         ok: true,
         sentTo: maskEmail(event.email),
-        brandSessionId: result.brandSessionId,
-        generationId: result.generationId,
         imageUrl: result.imageUrl,
         emailId: result.emailId,
       },
@@ -42,67 +40,59 @@ async function main() {
 }
 
 class ProgressReporter {
-  private readonly frames = ["-", "\\", "|", "/"];
   private readonly startedAt = Date.now();
-  private interval: NodeJS.Timeout | undefined;
-  private frameIndex = 0;
-  private message = "Starting";
-  private generationId: string | undefined;
+  private waitingInterval: NodeJS.Timeout | undefined;
 
   constructor(private readonly timeoutMs: number) {}
 
   update(progress: WelcomeFlowProgress): void {
-    this.message = progress.message;
-    this.generationId = "generationId" in progress ? progress.generationId : this.generationId;
+    this.stopWaitingUpdates();
 
-    if (!process.stderr.isTTY) {
-      this.logLine(progress);
+    if (progress.step === "validating") {
+      this.log("Checking test event and environment...");
       return;
     }
 
-    if (!this.interval) {
-      this.interval = setInterval(() => this.render(), 120);
+    if (progress.step === "generating") {
+      this.log("Starting image generation in Bloom...");
+      return;
     }
-    this.render();
+
+    if (progress.step === "waiting") {
+      this.log("Waiting for Bloom to finish the image. This usually takes about a minute.");
+      this.waitingInterval = setInterval(() => {
+        this.log(`Still waiting for Bloom... ${this.formatElapsed()}`);
+      }, 10_000);
+      return;
+    }
+
+    if (progress.step === "downloading") {
+      this.log("Image is ready. Downloading it for the email...");
+      return;
+    }
+
+    if (progress.step === "sending") {
+      this.log("Sending the email with Resend...");
+      return;
+    }
+
+    if (progress.step === "sent") {
+      this.log("Email accepted by Resend.");
+    }
   }
 
   stop(message: string): void {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = undefined;
-    }
-
-    if (process.stderr.isTTY) {
-      process.stderr.write(`\rOK ${message}${" ".repeat(40)}\n`);
-    } else {
-      process.stderr.write(`OK ${message}\n`);
-    }
+    this.stopWaitingUpdates();
+    this.log(`Success: ${message}`);
   }
 
   fail(message: string): void {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = undefined;
-    }
-
-    if (process.stderr.isTTY) {
-      process.stderr.write(`\rERROR ${message}${" ".repeat(40)}\n`);
-    } else {
-      process.stderr.write(`ERROR ${message}\n`);
-    }
+    this.stopWaitingUpdates();
+    this.log(`Error: ${message}`);
   }
 
-  private render(): void {
-    const frame = this.frames[this.frameIndex % this.frames.length];
-    this.frameIndex += 1;
-
-    process.stderr.write(
-      `\r${frame} ${this.message} ${this.formatElapsed()}${this.formatGenerationId()}`
-    );
-  }
-
-  private logLine(progress: WelcomeFlowProgress): void {
-    process.stderr.write(`${progress.message}${this.formatGenerationId()}\n`);
+  private log(message: string): void {
+    process.stderr.write(`${message}\n`);
   }
 
   private formatElapsed(): string {
@@ -111,8 +101,11 @@ class ProgressReporter {
     return `(${elapsedSeconds}s elapsed, timeout ${timeoutSeconds}s)`;
   }
 
-  private formatGenerationId(): string {
-    return this.generationId ? ` [${this.generationId}]` : "";
+  private stopWaitingUpdates(): void {
+    if (this.waitingInterval) {
+      clearInterval(this.waitingInterval);
+      this.waitingInterval = undefined;
+    }
   }
 }
 
