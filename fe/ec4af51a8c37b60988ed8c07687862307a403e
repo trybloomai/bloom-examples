@@ -1,0 +1,54 @@
+resend-dynamic-email/src/emails/email-template.tsx
+  s_482548a9f38bb1::t_e2861b31a24326 15-16,23,25-26
+  s_dd31649196da01::t_ec7413da576d6d 33-40,50,57,59-66,73,76-81,84,88-93
+resend-dynamic-email/test/prompt.test.ts
+  s_e4a1e385818c11::t_b73d3ad18e56da 7,18-21,25,37-39,55-56,58
+  s_e4a1e385818c11::t_3eafed7a6a7d37 42
+resend-dynamic-email/.env.example
+  s_e4a1e385818c11::t_61acfc0e7780f9 13
+resend-dynamic-email/package-lock.json
+  ai_agent 12
+resend-dynamic-email/tsconfig.json
+  s_482548a9f38bb1::t_a4f497d608ed2d 14
+resend-dynamic-email/scripts/preview-email.tsx
+  s_482548a9f38bb1::t_e2861b31a24326 1-67
+resend-dynamic-email/package.json
+  s_482548a9f38bb1::t_14f4865586d587 11,18
+resend-dynamic-email/README.md
+  s_482548a9f38bb1::t_a4f497d608ed2d 82-89
+  s_e4a1e385818c11::t_839e50bf370f8b 23,69,72,102,117
+resend-dynamic-email/src/prompt.ts
+  s_e4a1e385818c11::t_5de7312cd8fd9f 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "feec4af51a8c37b60988ed8c07687862307a403e",
+  "prompts": {},
+  "sessions": {
+    "s_482548a9f38bb1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9b23-c986-77b3-898e-1fa0097dcd72",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    },
+    "s_dd31649196da01": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0da05341-0052-4b76-9c55-ea23ee2b6d18",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    },
+    "s_e4a1e385818c11": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9b26-0192-7930-80f8-c5d96487d22a",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
