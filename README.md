@@ -26,9 +26,9 @@ This repo has copy-ready templates for connecting Bloom to real product flows. P
 
 These templates are live now:
 
-|  | Template | Use it for | Status |
+| Service | Template | Use it for | Status |
 | --- | --- | --- | --- |
-| <img src="assets/logos/resend.svg" alt="Resend" height="18" align="absmiddle" /> | [`resend-dynamic-email`](./resend-dynamic-email) | Send dynamic emails with images generated from your Bloom brand. | Live |
+| <img src="assets/logos/resend.svg" alt="" height="18" align="absmiddle" /> Resend | [`resend-dynamic-email`](./resend-dynamic-email) | Send dynamic emails with images generated from your Bloom brand. | Live |
 
 More coming soon at [`trybloom.ai/examples`](https://trybloom.ai/examples).
 
