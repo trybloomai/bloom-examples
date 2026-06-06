@@ -1,0 +1,19 @@
+resend-dynamic-email/README.md
+  s_d11804d97394b5::t_48a38bf147a4a9 15,18-20,43-46,49-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "3b80428e117d9751f043f4e798dd3697332c2b4d",
+  "prompts": {},
+  "sessions": {
+    "s_d11804d97394b5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e99ff-052e-7973-b64a-2813bacda171",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
