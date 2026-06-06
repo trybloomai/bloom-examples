@@ -15,7 +15,6 @@ export type MockConfig = {
   recipientName: string;
   emailType: string;
   subject: string;
-  imageHeadline: string;
   bodyText: string;
   eventId?: string;
   extraContext?: string;
@@ -40,7 +39,6 @@ export function getMockConfig(): MockConfig {
     "RECIPIENT_EMAIL",
     "RECIPIENT_NAME",
     "SUBJECT",
-    "IMAGE_HEADLINE",
     "BODY_TEXT",
   ]);
   requireOneEnv("EMAIL_TYPE", "USE_CASE");
@@ -50,7 +48,6 @@ export function getMockConfig(): MockConfig {
     recipientName: requiredEnv("RECIPIENT_NAME"),
     emailType: firstEnv("EMAIL_TYPE", "USE_CASE"),
     subject: requiredEnv("SUBJECT"),
-    imageHeadline: requiredEnv("IMAGE_HEADLINE"),
     bodyText: requiredEnv("BODY_TEXT"),
     eventId: env("EVENT_ID"),
     extraContext: env("EXTRA_CONTEXT") || undefined,

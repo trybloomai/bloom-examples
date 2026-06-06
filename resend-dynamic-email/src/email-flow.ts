@@ -121,10 +121,6 @@ function validateEmailEvent(event: EmailEvent): void {
     throw new Error("Email event is missing a subject.");
   }
 
-  if (!hasText(event.imageHeadline)) {
-    throw new Error("Email event is missing an imageHeadline.");
-  }
-
   if (!hasText(event.bodyText)) {
     throw new Error("Email event is missing bodyText.");
   }

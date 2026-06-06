@@ -4,17 +4,19 @@ import { describe, it } from "node:test";
 import { buildPrompt, sanitizeForPrompt } from "../src/prompt";
 
 describe("buildPrompt", () => {
-  it("renders the configured image headline", () => {
+  it("includes email context for Bloom", () => {
     const prompt = buildPrompt({
       emailType: "subscription renewal",
       recipientName: "Maria",
       recipientEmail: "maria@example.com",
       subject: "Your renewal is coming up",
-      imageHeadline: "Your renewal is almost here",
       bodyText: "Review your plan before it renews.",
     });
 
-    assert.match(prompt, /"Your renewal is almost here"/);
+    assert.match(prompt, /Email type: subscription renewal/);
+    assert.match(prompt, /Recipient name: Maria/);
+    assert.match(prompt, /Email subject: Your renewal is coming up/);
+    assert.match(prompt, /Email body: Review your plan before it renews\./);
     assert.match(prompt, /subscription renewal/);
   });
 
@@ -24,14 +26,15 @@ describe("buildPrompt", () => {
       recipientName: "Maria",
       recipientEmail: "maria@example.com",
       subject: "Your report is ready",
-      imageHeadline: "Your weekly report is ready",
       bodyText: "Open your report to see the latest results.",
       plan: "Pro",
       invitedBy: "Sam",
+      extraContext: "Use warm editorial photography.",
     });
 
     assert.match(prompt, /- plan: Pro/);
     assert.match(prompt, /- invitedBy: Sam/);
+    assert.match(prompt, /- Image guidance: Use warm editorial photography\./);
   });
 
   it("excludes reserved fields from extra context", () => {
@@ -41,14 +44,13 @@ describe("buildPrompt", () => {
       recipientName: "Maria",
       recipientEmail: "maria@example.com",
       subject: "Try this next",
-      imageHeadline: "Your next step",
       bodyText: "Here is one thing to try today.",
       source: "web",
     });
 
     assert.doesNotMatch(prompt, /evt_123/);
     assert.doesNotMatch(prompt, /maria@example.com/);
-    assert.doesNotMatch(prompt, /Try this next/);
+    assert.doesNotMatch(prompt, /- subject:/);
     assert.match(prompt, /- source: web/);
   });
 

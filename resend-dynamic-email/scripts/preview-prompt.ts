@@ -11,7 +11,6 @@ const prompt = buildPrompt({
   recipientName: config.recipientName,
   recipientEmail: config.recipientEmail,
   subject: config.subject,
-  imageHeadline: config.imageHeadline,
   bodyText: config.bodyText,
   ...(config.extraContext ? { extraContext: config.extraContext } : {}),
 });

@@ -16,12 +16,11 @@ await runEmailFlow({
   recipientName: "Maria",
   recipientEmail: "maria@example.com",
   subject: "Welcome!",
-  imageHeadline: "Welcome, Maria",
   bodyText: "We are glad you are here.",
 });
 ```
 
-Bloom renders `imageHeadline` inside the generated image. Resend sends the final email.
+Bloom decides whether the image should include text based on the email context. Resend sends the final email.
 
 Edit `src/prompt.ts` to change the Bloom prompt. Edit `src/emails/email-template.tsx` to change the email layout.
 
@@ -44,7 +43,6 @@ RECIPIENT_EMAIL=delivered@resend.dev
 RECIPIENT_NAME=Maria
 EMAIL_TYPE="welcome email"
 SUBJECT="Welcome to the family"
-IMAGE_HEADLINE="Welcome, Maria"
 BODY_TEXT="We are glad you are here."
 ```
 
@@ -68,11 +66,10 @@ Use plain text for the demo values. Quotes are optional, but helpful when a valu
 | `RECIPIENT_EMAIL` | The email address that receives the demo. Use `delivered@resend.dev` for a Resend test send, or your own address once your domain is ready. |
 | `RECIPIENT_NAME` | The recipient name used in the email greeting and available to the Bloom prompt. |
 | `EMAIL_TYPE` | The kind of email, like `welcome email`, `weekly report`, `receipt`, or `cart recovery`. This helps Bloom choose the right visual direction. |
-| `SUBJECT` | The normal email subject line. Resend uses this; Bloom does not render it in the image. |
-| `IMAGE_HEADLINE` | The exact text Bloom should render inside the generated image. Write the final text, not a placeholder. |
+| `SUBJECT` | The normal email subject line. Resend uses this. Bloom can use it as context for the image. |
 | `BODY_TEXT` | The email body copy. The email template renders this below the image. |
 
-`IMAGE_HEADLINE` is not a template variable. If the image should say `Welcome, Maria`, pass `IMAGE_HEADLINE="Welcome, Maria"`. If your workflow needs a different name per recipient, build that string in your code before calling `runEmailFlow`.
+You do not need to write image text yourself. Bloom receives the email type, recipient name, subject, body, and optional extra context. It decides whether in-image text helps. If it uses text, it writes final copy based on that context.
 
 ## Run The Demo
 
@@ -100,6 +97,8 @@ For quick local tests, you can add a plain text note:
 EXTRA_CONTEXT=Audience prefers warm editorial photography with simple product-focused layouts.
 ```
 
+Use `EXTRA_CONTEXT` for visual guidance that helps Bloom make better image choices. Do not use it for text you expect Bloom to render word-for-word.
+
 In your workflow, pass fields directly:
 
 ```ts
@@ -109,7 +108,6 @@ await runEmailFlow({
   recipientName: payload.user.name,
   recipientEmail: payload.user.email,
   subject: "Your weekly report is ready",
-  imageHeadline: "Your weekly report is ready",
   bodyText: "Open your report to see the latest results.",
   plan: payload.user.plan,
   reportPeriod: payload.report.period,
@@ -141,7 +139,6 @@ export async function POST(request: Request) {
     recipientName: payload.user.name,
     recipientEmail: payload.user.email,
     subject: payload.email.subject,
-    imageHeadline: payload.email.imageHeadline,
     bodyText: payload.email.bodyText,
   });
 
@@ -158,7 +155,7 @@ Copy this example into your project and let your coding agent wire it up:
 ```text
 Integrate trybloomai/bloom-examples/resend-dynamic-email into my workflow.
 Replace triggers/mock.ts with my real webhook, queue, cron job, or system event.
-Call runEmailFlow({ emailType, recipientName, recipientEmail, subject, imageHeadline, bodyText }) from there.
+Call runEmailFlow({ emailType, recipientName, recipientEmail, subject, bodyText }) from there.
 Keep using runEmailFlow and do not remove the cleanup in src/prompt.ts.
 Keep my existing email setup if I already have one.
 ```
