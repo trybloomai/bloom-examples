@@ -1,17 +1,26 @@
+<div align="center">
+
+<img src="assets/api-hero.png" alt="Bloom Examples" width="100%" />
+
+[![MCP](https://img.shields.io/badge/MCP-trybloom.ai-7C3AED)](https://trybloom.ai/mcp)
+&nbsp;
+![License](https://img.shields.io/badge/License-MIT-191919)
+
+<br />
+
 # Bloom Examples
+
+**Templates for connecting the Bloom brand layer to real product flows.**
+
+</div>
+
+---
 
 Welcome to the Bloom examples repo.
 
-[![Bloom MCP](https://img.shields.io/badge/Bloom-MCP-111827)](https://trybloom.ai/mcp)
-[![Examples](https://img.shields.io/badge/GitHub-trybloomai%2Fexamples-24292f?logo=github)](https://github.com/trybloomai/examples)
-[![Templates](https://img.shields.io/badge/Templates-live-16a34a)](#templates)
-[![More Coming Soon](https://img.shields.io/badge/More-coming_soon-64748b)](#templates)
+Bloom is the brand layer: the place where a brand lives, and the system other tools can call when they need to create on the brand's behalf.
 
-![Bloom examples hero](./assets/api-hero.png)
-
-This is where you can find ready-to-copy templates for adding Bloom to your own product.
-
-Each template shows a practical way to connect your app to Bloom, generate a branded image, and use it in a real product flow.
+This repo has copy-ready templates for connecting Bloom to real product flows. Pick a template, add your keys, replace the demo event with your own, and ship branded output from the systems you already use.
 
 ## Templates
 
@@ -19,13 +28,13 @@ These templates are live now:
 
 | Template | Use it for | Status |
 | --- | --- | --- |
-| [`resend-dynamic-email`](./resend-dynamic-email) | Adding generated brand images to dynamic emails. | Live |
+| [`resend-dynamic-email`](./resend-dynamic-email) | Send dynamic emails with images generated from your Bloom brand. | Live |
 
-More coming soon.
+More coming soon at [`trybloom.ai/examples`](https://trybloom.ai/examples).
 
 ## How To Use A Template
 
-Each folder works on its own. Pick the template you want, copy it into your app, add the required keys, and connect it to the place where your app should call Bloom.
+Each folder works on its own. Copy the one you need into your app, install its dependencies, add the required keys, and connect it to the place where your app should call Bloom.
 
 You can copy a template with `degit`:
 
@@ -37,22 +46,20 @@ npx degit trybloomai/bloom-examples/<template-name> <your-folder-name>
 
 ## What You Can Find Here
 
-- Setup instructions for each template
-- Required keys and setup steps
-- Example app events you can replace with your own
-- Prompting and integration code you can adapt to your product
-- Notes for running, testing, and shipping
+- Setup steps for each template
+- Required Bloom and service keys
+- Demo events you can replace with your own app events
+- Prompt and integration code you can edit
+- Notes for testing and shipping
 
 ## Point Your Agent At This
 
-You can also ask a coding agent to integrate a template for you:
+You can also ask a coding agent to wire a template into your app:
 
 ```text
 Integrate one of the templates from trybloomai/bloom-examples into my app.
-Replace the mock event with my real app event.
+Replace the demo event with my real app event.
 Keep my existing email, queue, or webhook setup where possible.
 ```
 
 Works with Claude Code, Codex, Cursor, Windsurf, or any coding agent with repo access.
-
-More examples also live at [`trybloomai/examples`](https://github.com/trybloomai/examples).
