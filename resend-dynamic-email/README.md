@@ -12,13 +12,12 @@ Bloom renders your `imageHeadline` inside the generated image. The email use cas
 
 ```ts
 await runEmailFlow({
-  useCase: "subscription renewal",
+  useCase: "welcome email",
   recipientName: "Maria",
   recipientEmail: "maria@example.com",
-  subject: "Your renewal is coming up",
-  imageHeadline: "Your renewal is almost here",
-  bodyText: "Review your plan before it renews.",
-  plan: "Pro",
+  subject: "Welcome!",
+  imageHeadline: "Welcome, Maria",
+  bodyText: "We are glad you are here.",
 });
 ```
 
@@ -41,11 +40,13 @@ BLOOM_BRAND_SESSION_ID=...
 RESEND_API_KEY=re_...
 TEST_RECIPIENT_EMAIL=you@example.com
 TEST_RECIPIENT_NAME=Maria
-TEST_USE_CASE=subscription renewal
-TEST_SUBJECT=Your renewal is coming up
-TEST_IMAGE_HEADLINE=Your renewal is almost here
-TEST_BODY_TEXT=Review your plan before it renews.
+TEST_USE_CASE=welcome email
+TEST_SUBJECT=Welcome!
+TEST_IMAGE_HEADLINE=Welcome, Maria
+TEST_BODY_TEXT=We are glad you are here.
 ```
+
+Those `TEST_*` values are only the local demo. Change them to any email use case, or pass real values from your app when you replace the mock trigger.
 
 Then run:
 
@@ -181,4 +182,3 @@ npm run typecheck
 npm run test
 npm run trigger
 ```
-
