@@ -15,13 +15,13 @@ const progressMessages = {
 async function main() {
   const config = getMockConfig();
   const event = {
-    id: config.testEventId ?? `mock-email-${randomUUID()}`,
-    useCase: config.testUseCase,
-    recipientName: config.testRecipientName,
-    recipientEmail: config.testRecipientEmail,
-    subject: config.testSubject,
-    imageHeadline: config.testImageHeadline,
-    bodyText: config.testBodyText,
+    id: config.eventId ?? `mock-email-${randomUUID()}`,
+    useCase: config.useCase,
+    recipientName: config.recipientName,
+    recipientEmail: config.recipientEmail,
+    subject: config.subject,
+    imageHeadline: config.imageHeadline,
+    bodyText: config.bodyText,
     ...(config.extraContext ? { extraContext: config.extraContext } : {}),
   };
 
@@ -47,4 +47,3 @@ main().catch((error: unknown) => {
   console.error(message);
   process.exitCode = 1;
 });
-

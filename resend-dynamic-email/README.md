@@ -38,15 +38,15 @@ Fill `.env`:
 BLOOM_API_KEY=bloom_sk_...
 BLOOM_BRAND_SESSION_ID=...
 RESEND_API_KEY=re_...
-TEST_RECIPIENT_EMAIL=you@example.com
-TEST_RECIPIENT_NAME=Maria
-TEST_USE_CASE=welcome email
-TEST_SUBJECT=Welcome!
-TEST_IMAGE_HEADLINE=Welcome, Maria
-TEST_BODY_TEXT=We are glad you are here.
+RECIPIENT_EMAIL=you@example.com
+RECIPIENT_NAME=Maria
+USE_CASE=welcome email
+SUBJECT=Welcome!
+IMAGE_HEADLINE=Welcome, Maria
+BODY_TEXT=We are glad you are here.
 ```
 
-Those `TEST_*` values are only the local demo. Change them to any email use case, or pass real values from your app when you replace the mock trigger.
+Those values drive the local demo. Change them to any email use case, or pass real values from your app when you replace the mock trigger.
 
 Then run:
 
@@ -63,7 +63,7 @@ The email includes a unique `X-Entity-Ref-ID` header so repeated test sends do n
 - Bloom API key
 - Bloom `brandSessionId` for an onboarded brand
 - Resend API key
-- For Resend sandbox mode, a `TEST_RECIPIENT_EMAIL` registered in Resend
+- For Resend sandbox mode, a `RECIPIENT_EMAIL` registered in Resend
 
 ## Extra Context
 
@@ -149,11 +149,11 @@ BLOOM_API_URL=https://www.trybloom.ai/api/v1
 BLOOM_ASPECT_RATIO=16:9
 BLOOM_TIMEOUT_MS=120000
 FROM_EMAIL=onboarding@resend.dev
-TEST_EVENT_ID=
+EVENT_ID=
 EXTRA_CONTEXT=
 ```
 
-`TEST_EVENT_ID` is only for testing idempotency. The mock trigger generates a fresh event id by default so repeated test runs do not collide in Resend.
+`EVENT_ID` is only needed when you want a stable idempotency key. The mock trigger generates a fresh event id by default so repeated demo runs do not collide in Resend.
 
 Use `onboarding@resend.dev` only for testing. In production, set `FROM_EMAIL` to an address on your verified sending domain.
 

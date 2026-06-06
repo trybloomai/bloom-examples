@@ -11,13 +11,13 @@ export type AppConfig = {
 };
 
 export type MockConfig = {
-  testRecipientEmail: string;
-  testRecipientName: string;
-  testUseCase: string;
-  testSubject: string;
-  testImageHeadline: string;
-  testBodyText: string;
-  testEventId?: string;
+  recipientEmail: string;
+  recipientName: string;
+  useCase: string;
+  subject: string;
+  imageHeadline: string;
+  bodyText: string;
+  eventId?: string;
   extraContext?: string;
 };
 
@@ -37,22 +37,22 @@ export function getAppConfig(): AppConfig {
 
 export function getMockConfig(): MockConfig {
   requireEnv([
-    "TEST_RECIPIENT_EMAIL",
-    "TEST_RECIPIENT_NAME",
-    "TEST_USE_CASE",
-    "TEST_SUBJECT",
-    "TEST_IMAGE_HEADLINE",
-    "TEST_BODY_TEXT",
+    "RECIPIENT_EMAIL",
+    "RECIPIENT_NAME",
+    "USE_CASE",
+    "SUBJECT",
+    "IMAGE_HEADLINE",
+    "BODY_TEXT",
   ]);
 
   return {
-    testRecipientEmail: requiredEnv("TEST_RECIPIENT_EMAIL"),
-    testRecipientName: requiredEnv("TEST_RECIPIENT_NAME"),
-    testUseCase: requiredEnv("TEST_USE_CASE"),
-    testSubject: requiredEnv("TEST_SUBJECT"),
-    testImageHeadline: requiredEnv("TEST_IMAGE_HEADLINE"),
-    testBodyText: requiredEnv("TEST_BODY_TEXT"),
-    testEventId: env("TEST_EVENT_ID"),
+    recipientEmail: requiredEnv("RECIPIENT_EMAIL"),
+    recipientName: requiredEnv("RECIPIENT_NAME"),
+    useCase: requiredEnv("USE_CASE"),
+    subject: requiredEnv("SUBJECT"),
+    imageHeadline: requiredEnv("IMAGE_HEADLINE"),
+    bodyText: requiredEnv("BODY_TEXT"),
+    eventId: env("EVENT_ID"),
     extraContext: env("EXTRA_CONTEXT") || undefined,
   };
 }
@@ -78,4 +78,3 @@ function env(key: string): string | undefined {
   const value = process.env[key]?.trim();
   return value || undefined;
 }
-
