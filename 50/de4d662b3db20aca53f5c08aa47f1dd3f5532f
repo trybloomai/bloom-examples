@@ -1,0 +1,25 @@
+resend-dynamic-email/README.md
+  s_c8d35a99762e65::t_025646a005b6b1 9,49,57,70,76,92,96,98,101,125,127,137,156,163-167,176
+README.md
+  s_c8d35a99762e65::t_cb687ca95c43c1 5-6,15,17,19,23,25,27,29,31,56
+  s_c8d35a99762e65::t_b4f65497ea3697 10
+  s_c8d35a99762e65::t_a6112416c95fb6 3,7-8,16,18,20-22,24,26,30,32-33,38,40,43,48,51,57-58
+  s_c8d35a99762e65::t_9d7f9e077f5daa 12,28,36,41-42,44,52-53
+  s_c8d35a99762e65::t_510f0a3ee89be9 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "50de4d662b3db20aca53f5c08aa47f1dd3f5532f",
+  "prompts": {},
+  "sessions": {
+    "s_c8d35a99762e65": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9a8b-add9-7013-93a9-7fe25ea5ca74",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
