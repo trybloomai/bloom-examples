@@ -2,15 +2,15 @@
 
 <img src="assets/api-hero.png" alt="Bloom Examples" width="100%" />
 
-[![MCP](https://img.shields.io/badge/MCP-trybloom.ai-7C3AED)](https://trybloom.ai/mcp)
-&nbsp;
-![License](https://img.shields.io/badge/License-MIT-191919)
-
 <br />
 
 # Bloom Examples
 
 **Templates for connecting the Bloom brand layer to real product flows.**
+
+[![MCP](https://img.shields.io/badge/MCP-trybloom.ai-7C3AED)](https://trybloom.ai/mcp)
+&nbsp;
+![License](https://img.shields.io/badge/License-MIT-191919)
 
 </div>
 
