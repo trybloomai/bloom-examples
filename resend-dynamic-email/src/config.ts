@@ -38,15 +38,15 @@ export function getMockConfig(): MockConfig {
   requireEnv([
     "RECIPIENT_EMAIL",
     "RECIPIENT_NAME",
+    "EMAIL_TYPE",
     "SUBJECT",
     "BODY_TEXT",
   ]);
-  requireOneEnv("EMAIL_TYPE", "USE_CASE");
 
   return {
     recipientEmail: requiredEnv("RECIPIENT_EMAIL"),
     recipientName: requiredEnv("RECIPIENT_NAME"),
-    emailType: firstEnv("EMAIL_TYPE", "USE_CASE"),
+    emailType: requiredEnv("EMAIL_TYPE"),
     subject: requiredEnv("SUBJECT"),
     bodyText: requiredEnv("BODY_TEXT"),
     eventId: env("EVENT_ID"),
@@ -69,27 +69,6 @@ function requiredEnv(key: string): string {
     throw new Error(`Missing required environment variable: ${key}`);
   }
   return value;
-}
-
-function requireOneEnv(...keys: string[]): void {
-  if (keys.some((key) => env(key))) {
-    return;
-  }
-
-  throw new Error(
-    `Missing required environment variable: ${keys[0]}. Copy .env.example to .env and fill it in.`
-  );
-}
-
-function firstEnv(...keys: string[]): string {
-  for (const key of keys) {
-    const value = env(key);
-    if (value) {
-      return value;
-    }
-  }
-
-  throw new Error(`Missing required environment variable: ${keys[0]}`);
 }
 
 function env(key: string): string | undefined {
