@@ -13,12 +13,16 @@ export type EmailTemplateProps = {
   recipientName: string;
   bodyText: string;
   imageCid: string;
+  // Used as the hero image's alt text. Email clients block images by default,
+  // so this is what most recipients see until they load images.
+  imageAlt: string;
 };
 
 export function EmailTemplate({
   recipientName,
   bodyText,
   imageCid,
+  imageAlt,
 }: EmailTemplateProps) {
   return (
     <Html>
@@ -27,7 +31,12 @@ export function EmailTemplate({
       <Body style={body}>
         <Container style={container}>
           <Section>
-            <Img src={`cid:${imageCid}`} alt="" width="640" style={heroImage} />
+            <Img
+              src={`cid:${imageCid}`}
+              alt={imageAlt}
+              width="640"
+              style={heroImage}
+            />
           </Section>
           <Text style={copy}>Hi {recipientName},</Text>
           <Text style={copy}>{bodyText}</Text>

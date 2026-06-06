@@ -67,6 +67,7 @@ export async function runEmailFlow(
         recipientName: event.recipientName,
         bodyText: event.bodyText,
         imageCid: IMAGE_CID,
+        imageAlt: event.subject,
       }),
       attachments: [
         {
