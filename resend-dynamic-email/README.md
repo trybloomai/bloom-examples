@@ -51,9 +51,13 @@ BODY_TEXT=We are glad you are here.
 You need:
 
 - A [Bloom API key](https://www.trybloom.ai/settings)
-- A Bloom [`brandSessionId`](https://www.trybloom.ai/docs/api#get-a-brand-id)
+- A Bloom `brandSessionId`
 - A [Resend API key](https://resend.com/api-keys)
 - For testing, use a [Resend test address](https://resend.com/docs/dashboard/emails/send-test-emails) like `delivered@resend.dev`. For production, [verify your sending domain](https://resend.com/domains).
+
+To get the `brandSessionId`, open your brand in [Bloom](https://www.trybloom.ai/brands) and copy the ID from the URL. In `https://www.trybloom.ai/brand/<id>`, `<id>` is the value to paste into `BLOOM_BRAND_SESSION_ID`.
+
+For automated workflows, you can also [list your brands with the API](https://www.trybloom.ai/docs/api#get-a-brand-id) and copy any returned `id`.
 
 ## Run The Demo
 
@@ -151,7 +155,9 @@ EVENT_ID=
 EXTRA_CONTEXT=
 ```
 
-`EVENT_ID` is only needed when you want repeated demo runs to reuse the same email id. By default, the demo creates a fresh id each time.
+Leave `EVENT_ID` empty for normal testing. The demo will create a new ID for each send.
+
+Set `EVENT_ID` only when you want to test how your workflow handles the same email event twice.
 
 Use `onboarding@resend.dev` only for testing. In production, set `FROM_EMAIL` to an address on your verified sending domain.
 
