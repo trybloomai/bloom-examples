@@ -1,0 +1,22 @@
+resend-dynamic-email/.env.example
+  s_c8d35a99762e65::t_80373477fbdbb6 1-12
+resend-dynamic-email/README.md
+  s_c8d35a99762e65::t_41721d34b42ded 37,40-43,45-46,48,62-75
+  s_c8d35a99762e65::t_6ca8245430bc0c 47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "3616f12241e433f2b7c9c19bf1854ebf77ac9c67",
+  "prompts": {},
+  "sessions": {
+    "s_c8d35a99762e65": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9a8b-add9-7013-93a9-7fe25ea5ca74",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
