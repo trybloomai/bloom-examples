@@ -155,9 +155,9 @@ EVENT_ID=
 EXTRA_CONTEXT=
 ```
 
-Leave `EVENT_ID` empty for normal testing. The demo will create a new ID for each send.
+Leave `EVENT_ID` empty for normal testing. The demo will treat each run as a new email.
 
-Set `EVENT_ID` only when you want to test how your workflow handles the same email event twice.
+Set `EVENT_ID` only when you already have a real event id from your system. Reusing that id helps prevent sending the same email twice if the same event is retried.
 
 Use `onboarding@resend.dev` only for testing. In production, set `FROM_EMAIL` to an address on your verified sending domain.
 
