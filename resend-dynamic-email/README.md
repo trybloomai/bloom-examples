@@ -99,6 +99,24 @@ EXTRA_CONTEXT=Audience prefers warm editorial photography with simple product-fo
 
 Use `EXTRA_CONTEXT` for visual guidance that helps Bloom make better image choices. Do not use it for text you expect Bloom to render word-for-word.
 
+Good `EXTRA_CONTEXT` examples:
+
+```env
+EXTRA_CONTEXT=Audience prefers warm editorial photography, soft natural light, and uncluttered layouts.
+```
+
+```env
+EXTRA_CONTEXT=Make the image feel premium and calm. Avoid dashboards, charts, confetti, and busy UI screenshots.
+```
+
+```env
+EXTRA_CONTEXT=The email is for ecommerce customers who just bought a gift. Lean into cozy packaging, tissue paper, and a refined unboxing mood.
+```
+
+```env
+EXTRA_CONTEXT=The email should feel like a product update, not a promotion. Use a clean composition with one clear focal point.
+```
+
 In your workflow, pass fields directly:
 
 ```ts
