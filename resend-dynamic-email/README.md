@@ -2,7 +2,7 @@
 
 Send dynamic emails with images generated from your Bloom brand.
 
-This example calls Bloom, creates an on-brand email hero image, downloads it, and sends the email through Resend. Use it as a starting point for welcome emails, lifecycle campaigns, receipts, reports, alerts, or any email that should carry your brand visually.
+This template calls Bloom, creates an on-brand email hero image, downloads it, and sends the email through Resend. Use it as a starting point for welcome emails, lifecycle campaigns, receipts, reports, alerts, or any email that should carry your brand visually.
 
 ```text
 email event -> runEmailFlow(event) -> Bloom image -> Resend email
@@ -168,7 +168,7 @@ Pass an `event.id` when your workflow already has one. Resend uses it to avoid s
 
 ## Point Your Agent At This
 
-Copy this example into your project and let your coding agent wire it up:
+Copy this template into your project and let your coding agent wire it up:
 
 ```text
 Integrate trybloomai/bloom-examples/resend-dynamic-email into my workflow.
@@ -206,7 +206,7 @@ Use `onboarding@resend.dev` only for testing. In production, set `FROM_EMAIL` to
 - Retry later if Bloom or Resend is temporarily unavailable.
 - Keep `BLOOM_TIMEOUT_MS` lower than the maximum time your workflow can wait for a request.
 - Track image failures, email failures, and repeated email ids.
-- Add your own backup image if your product needs one. This example stops instead of sending a generic email.
+- Add your own backup image if your product needs one. This template stops instead of sending a generic email.
 
 ## Troubleshooting
 

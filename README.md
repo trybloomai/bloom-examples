@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="assets/api-hero.png" alt="Bloom Examples" width="100%" />
+<img src="assets/api-hero.png" alt="Bloom Templates" width="100%" />
 
 <br />
 
-# Bloom Examples
+# Bloom Templates
 
 **Templates for connecting the Bloom brand layer to real product flows.**
 
@@ -16,7 +16,7 @@
 
 ---
 
-Welcome to the Bloom examples repo.
+Welcome to the Bloom templates repo.
 
 Bloom is the brand layer: the place where a brand lives, and the system other tools can call when they need to create on the brand's behalf.
 
@@ -30,7 +30,7 @@ These templates are live now:
 | --- | --- | --- | --- |
 | <img src="assets/logos/resend.svg" alt="" height="18" align="absmiddle" /> Resend | [`resend-dynamic-email`](./resend-dynamic-email) | Send dynamic emails with images generated from your Bloom brand. | Live |
 
-More coming soon at [`trybloom.ai/examples`](https://trybloom.ai/examples).
+More coming soon at [`trybloom.ai/templates`](https://trybloom.ai/templates).
 
 ## How To Use A Template
 
