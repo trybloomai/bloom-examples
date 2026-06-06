@@ -105,11 +105,11 @@ export async function runEmailFlow(
 }
 
 function validateEmailEvent(event: EmailEvent): void {
-  if (!event.useCase.trim()) {
-    throw new Error("Email event is missing a useCase.");
+  if (!hasText(event.emailType)) {
+    throw new Error("Email event is missing an emailType.");
   }
 
-  if (!event.recipientName.trim()) {
+  if (!hasText(event.recipientName)) {
     throw new Error("Email event is missing a recipientName.");
   }
 
@@ -117,20 +117,23 @@ function validateEmailEvent(event: EmailEvent): void {
     throw new Error(`Email event has an invalid recipientEmail: ${event.recipientEmail}`);
   }
 
-  if (!event.subject.trim()) {
+  if (!hasText(event.subject)) {
     throw new Error("Email event is missing a subject.");
   }
 
-  if (!event.imageHeadline.trim()) {
+  if (!hasText(event.imageHeadline)) {
     throw new Error("Email event is missing an imageHeadline.");
   }
 
-  if (!event.bodyText.trim()) {
+  if (!hasText(event.bodyText)) {
     throw new Error("Email event is missing bodyText.");
   }
+}
+
+function hasText(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
-

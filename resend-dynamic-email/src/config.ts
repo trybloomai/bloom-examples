@@ -13,7 +13,7 @@ export type AppConfig = {
 export type MockConfig = {
   recipientEmail: string;
   recipientName: string;
-  useCase: string;
+  emailType: string;
   subject: string;
   imageHeadline: string;
   bodyText: string;
@@ -39,16 +39,16 @@ export function getMockConfig(): MockConfig {
   requireEnv([
     "RECIPIENT_EMAIL",
     "RECIPIENT_NAME",
-    "USE_CASE",
     "SUBJECT",
     "IMAGE_HEADLINE",
     "BODY_TEXT",
   ]);
+  requireOneEnv("EMAIL_TYPE", "USE_CASE");
 
   return {
     recipientEmail: requiredEnv("RECIPIENT_EMAIL"),
     recipientName: requiredEnv("RECIPIENT_NAME"),
-    useCase: requiredEnv("USE_CASE"),
+    emailType: firstEnv("EMAIL_TYPE", "USE_CASE"),
     subject: requiredEnv("SUBJECT"),
     imageHeadline: requiredEnv("IMAGE_HEADLINE"),
     bodyText: requiredEnv("BODY_TEXT"),
@@ -72,6 +72,27 @@ function requiredEnv(key: string): string {
     throw new Error(`Missing required environment variable: ${key}`);
   }
   return value;
+}
+
+function requireOneEnv(...keys: string[]): void {
+  if (keys.some((key) => env(key))) {
+    return;
+  }
+
+  throw new Error(
+    `Missing required environment variable: ${keys[0]}. Copy .env.example to .env and fill it in.`
+  );
+}
+
+function firstEnv(...keys: string[]): string {
+  for (const key of keys) {
+    const value = env(key);
+    if (value) {
+      return value;
+    }
+  }
+
+  throw new Error(`Missing required environment variable: ${keys[0]}`);
 }
 
 function env(key: string): string | undefined {

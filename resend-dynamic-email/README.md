@@ -12,7 +12,7 @@ email event -> runEmailFlow(event) -> Bloom image -> Resend email
 
 ```ts
 await runEmailFlow({
-  useCase: "welcome email",
+  emailType: "welcome email",
   recipientName: "Maria",
   recipientEmail: "maria@example.com",
   subject: "Welcome!",
@@ -42,7 +42,7 @@ BLOOM_BRAND_SESSION_ID=...
 RESEND_API_KEY=re_...
 RECIPIENT_EMAIL=you@example.com
 RECIPIENT_NAME=Maria
-USE_CASE=welcome email
+EMAIL_TYPE=welcome email
 SUBJECT=Welcome!
 IMAGE_HEADLINE=Welcome, Maria
 BODY_TEXT=We are glad you are here.
@@ -60,6 +60,14 @@ To get the `brandSessionId`, open your brand in [Bloom](https://www.trybloom.ai/
 For automated workflows, you can also [list your brands with the API](https://www.trybloom.ai/docs/api#get-a-brand-id) and copy any returned `id`.
 
 ## Run The Demo
+
+To preview the full Bloom prompt without calling Bloom or Resend:
+
+```bash
+npm run prompt
+```
+
+Then send the demo email:
 
 ```bash
 npm run trigger
@@ -82,7 +90,7 @@ In your workflow, pass fields directly:
 ```ts
 await runEmailFlow({
   id: payload.id,
-  useCase: "weekly report",
+  emailType: "weekly report",
   recipientName: payload.user.name,
   recipientEmail: payload.user.email,
   subject: "Your weekly report is ready",
@@ -114,7 +122,7 @@ export async function POST(request: Request) {
 
   await runEmailFlow({
     id: payload.id,
-    useCase: payload.type,
+    emailType: payload.type,
     recipientName: payload.user.name,
     recipientEmail: payload.user.email,
     subject: payload.email.subject,
@@ -135,7 +143,7 @@ Copy this example into your project and let your coding agent wire it up:
 ```text
 Integrate trybloomai/bloom-examples/resend-dynamic-email into my workflow.
 Replace triggers/mock.ts with my real webhook, queue, cron job, or system event.
-Call runEmailFlow({ useCase, recipientName, recipientEmail, subject, imageHeadline, bodyText }) from there.
+Call runEmailFlow({ emailType, recipientName, recipientEmail, subject, imageHeadline, bodyText }) from there.
 Keep using runEmailFlow and do not remove the cleanup in src/prompt.ts.
 Keep my existing email setup if I already have one.
 ```
