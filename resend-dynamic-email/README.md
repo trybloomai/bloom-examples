@@ -39,8 +39,8 @@ cp .env.example .env
 BLOOM_API_KEY=bloom_sk_replace_me
 BLOOM_BRAND_SESSION_ID=replace_with_brand_id_from_bloom_url
 RESEND_API_KEY=re_replace_me
-RECIPIENT_EMAIL=delivered@resend.dev
-RECIPIENT_NAME=Maria
+RECIPIENT_EMAIL="delivered@resend.dev"
+RECIPIENT_NAME="Maria"
 EMAIL_TYPE="welcome email"
 SUBJECT="Welcome to the family"
 BODY_TEXT="We are glad you are here."
@@ -94,7 +94,7 @@ The email includes a hidden `X-Entity-Ref-ID` header so repeated test emails sta
 For quick local tests, you can add a plain text note:
 
 ```env
-EXTRA_CONTEXT=Audience prefers warm editorial photography with simple product-focused layouts.
+EXTRA_CONTEXT="Audience prefers warm editorial photography with simple product-focused layouts."
 ```
 
 Use `EXTRA_CONTEXT` for visual guidance that helps Bloom make better image choices. Do not use it for text you expect Bloom to render word-for-word.
@@ -102,19 +102,19 @@ Use `EXTRA_CONTEXT` for visual guidance that helps Bloom make better image choic
 Good `EXTRA_CONTEXT` examples:
 
 ```env
-EXTRA_CONTEXT=Audience prefers warm editorial photography, soft natural light, and uncluttered layouts.
+EXTRA_CONTEXT="Audience prefers warm editorial photography, soft natural light, and uncluttered layouts."
 ```
 
 ```env
-EXTRA_CONTEXT=Make the image feel premium and calm. Avoid dashboards, charts, confetti, and busy UI screenshots.
+EXTRA_CONTEXT="Make the image feel premium and calm. Avoid dashboards, charts, confetti, and busy UI screenshots."
 ```
 
 ```env
-EXTRA_CONTEXT=The email is for ecommerce customers who just bought a gift. Lean into cozy packaging, tissue paper, and a refined unboxing mood.
+EXTRA_CONTEXT="The email is for ecommerce customers who just bought a gift. Lean into cozy packaging, tissue paper, and a refined unboxing mood."
 ```
 
 ```env
-EXTRA_CONTEXT=The email should feel like a product update, not a promotion. Use a clean composition with one clear focal point.
+EXTRA_CONTEXT="The email should feel like a product update, not a promotion. Use a clean composition with one clear focal point."
 ```
 
 In your workflow, pass fields directly:
@@ -185,10 +185,10 @@ Works with Claude Code, Codex, Cursor, Windsurf, or any coding agent with repo a
 Keep `.env.example` to the required values. Add these only when you need them:
 
 ```env
-BLOOM_API_URL=https://www.trybloom.ai/api/v1
-BLOOM_ASPECT_RATIO=16:9
+BLOOM_API_URL="https://www.trybloom.ai/api/v1"
+BLOOM_ASPECT_RATIO="16:9"
 BLOOM_TIMEOUT_MS=120000
-FROM_EMAIL=onboarding@resend.dev
+FROM_EMAIL="onboarding@resend.dev"
 EVENT_ID=
 EXTRA_CONTEXT=
 ```
