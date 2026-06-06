@@ -8,12 +8,15 @@ export type AppConfig = {
   bloomTimeoutMs: number;
   resendApiKey: string;
   fromEmail: string;
-  emailSubject: string;
 };
 
 export type MockConfig = {
-  testEmail: string;
-  testName: string;
+  testRecipientEmail: string;
+  testRecipientName: string;
+  testUseCase: string;
+  testSubject: string;
+  testImageHeadline: string;
+  testBodyText: string;
   testEventId?: string;
   extraContext?: string;
 };
@@ -29,16 +32,26 @@ export function getAppConfig(): AppConfig {
     bloomTimeoutMs: Number(env("BLOOM_TIMEOUT_MS") || "120000"),
     resendApiKey: requiredEnv("RESEND_API_KEY"),
     fromEmail: env("FROM_EMAIL") || "onboarding@resend.dev",
-    emailSubject: env("EMAIL_SUBJECT") || "Welcome!",
   };
 }
 
 export function getMockConfig(): MockConfig {
-  requireEnv(["TEST_EMAIL", "TEST_NAME"]);
+  requireEnv([
+    "TEST_RECIPIENT_EMAIL",
+    "TEST_RECIPIENT_NAME",
+    "TEST_USE_CASE",
+    "TEST_SUBJECT",
+    "TEST_IMAGE_HEADLINE",
+    "TEST_BODY_TEXT",
+  ]);
 
   return {
-    testEmail: requiredEnv("TEST_EMAIL"),
-    testName: requiredEnv("TEST_NAME"),
+    testRecipientEmail: requiredEnv("TEST_RECIPIENT_EMAIL"),
+    testRecipientName: requiredEnv("TEST_RECIPIENT_NAME"),
+    testUseCase: requiredEnv("TEST_USE_CASE"),
+    testSubject: requiredEnv("TEST_SUBJECT"),
+    testImageHeadline: requiredEnv("TEST_IMAGE_HEADLINE"),
+    testBodyText: requiredEnv("TEST_BODY_TEXT"),
     testEventId: env("TEST_EVENT_ID"),
     extraContext: env("EXTRA_CONTEXT") || undefined,
   };
@@ -65,3 +78,4 @@ function env(key: string): string | undefined {
   const value = process.env[key]?.trim();
   return value || undefined;
 }
+

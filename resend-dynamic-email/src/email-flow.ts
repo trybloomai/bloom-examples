@@ -4,19 +4,19 @@ import { Resend } from "resend";
 
 import { fetchImageBuffer, generateImage, waitForImage } from "./bloom";
 import { getAppConfig } from "./config";
-import { WelcomeEmail } from "./emails/welcome-email";
-import { buildPrompt, type WelcomeEvent } from "./prompt";
+import { EmailTemplate } from "./emails/email-template";
+import { buildPrompt, type EmailEvent } from "./prompt";
 
-const IMAGE_CID = "welcome-hero";
+const IMAGE_CID = "email-hero";
 
-export type WelcomeFlowResult = {
+export type EmailFlowResult = {
   brandSessionId: string;
   generationId: string;
   imageUrl: string;
   emailId: string;
 };
 
-export type WelcomeFlowProgress =
+export type EmailFlowProgress =
   | { step: "validating"; message: string }
   | { step: "generating"; message: string }
   | { step: "waiting"; message: string; generationId: string }
@@ -24,26 +24,20 @@ export type WelcomeFlowProgress =
   | { step: "sending"; message: string; generationId: string }
   | { step: "sent"; message: string; generationId: string; imageUrl: string; emailId: string };
 
-export type WelcomeFlowOptions = {
-  onProgress?: (progress: WelcomeFlowProgress) => void;
+export type EmailFlowOptions = {
+  onProgress?: (progress: EmailFlowProgress) => void;
 };
 
-export async function runWelcomeFlow(
-  event: WelcomeEvent,
-  options: WelcomeFlowOptions = {}
-): Promise<WelcomeFlowResult> {
-  options.onProgress?.({
-    step: "validating",
-    message: "Validating welcome event",
-  });
-  validateWelcomeEvent(event);
+export async function runEmailFlow(
+  event: EmailEvent,
+  options: EmailFlowOptions = {}
+): Promise<EmailFlowResult> {
+  options.onProgress?.({ step: "validating", message: "Validating email event" });
+  validateEmailEvent(event);
 
   const config = getAppConfig();
   const prompt = buildPrompt(event);
-  options.onProgress?.({
-    step: "generating",
-    message: "Starting Bloom image generation",
-  });
+  options.onProgress?.({ step: "generating", message: "Starting Bloom image generation" });
   const generationId = await generateImage(prompt, config);
   options.onProgress?.({
     step: "waiting",
@@ -59,27 +53,24 @@ export async function runWelcomeFlow(
   });
   const imageBuffer = await fetchImageBuffer(imageUrl, config);
 
-  options.onProgress?.({
-    step: "sending",
-    message: "Sending email with Resend",
-    generationId,
-  });
+  options.onProgress?.({ step: "sending", message: "Sending email with Resend", generationId });
   const resend = new Resend(config.resendApiKey);
   const result = await resend.emails.send(
     {
       from: config.fromEmail,
-      to: event.email,
-      subject: config.emailSubject,
+      to: event.recipientEmail,
+      subject: event.subject,
       headers: {
         "X-Entity-Ref-ID": event.id ?? randomUUID(),
       },
-      react: React.createElement(WelcomeEmail, {
-        name: event.name,
+      react: React.createElement(EmailTemplate, {
+        recipientName: event.recipientName,
+        bodyText: event.bodyText,
         imageCid: IMAGE_CID,
       }),
       attachments: [
         {
-          filename: "welcome-hero.png",
+          filename: "email-hero.png",
           content: imageBuffer,
           contentType: "image/png",
           contentId: IMAGE_CID,
@@ -90,7 +81,7 @@ export async function runWelcomeFlow(
   );
 
   if (result.error) {
-    throw new Error(`Resend failed to send the welcome email: ${result.error.message}`);
+    throw new Error(`Resend failed to send the email: ${result.error.message}`);
   }
 
   if (!result.data?.id) {
@@ -113,16 +104,33 @@ export async function runWelcomeFlow(
   };
 }
 
-function validateWelcomeEvent(event: WelcomeEvent): void {
-  if (!event.name.trim()) {
-    throw new Error("Welcome event is missing a name.");
+function validateEmailEvent(event: EmailEvent): void {
+  if (!event.useCase.trim()) {
+    throw new Error("Email event is missing a useCase.");
   }
 
-  if (!isValidEmail(event.email)) {
-    throw new Error(`Welcome event has an invalid email address: ${event.email}`);
+  if (!event.recipientName.trim()) {
+    throw new Error("Email event is missing a recipientName.");
+  }
+
+  if (!isValidEmail(event.recipientEmail)) {
+    throw new Error(`Email event has an invalid recipientEmail: ${event.recipientEmail}`);
+  }
+
+  if (!event.subject.trim()) {
+    throw new Error("Email event is missing a subject.");
+  }
+
+  if (!event.imageHeadline.trim()) {
+    throw new Error("Email event is missing an imageHeadline.");
+  }
+
+  if (!event.bodyText.trim()) {
+    throw new Error("Email event is missing bodyText.");
   }
 }
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
+

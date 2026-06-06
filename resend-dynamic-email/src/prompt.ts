@@ -1,12 +1,24 @@
-export type WelcomeEvent = {
-  name: string;
-  email: string;
+export type EmailEvent = {
+  useCase: string;
+  recipientName: string;
+  recipientEmail: string;
+  subject: string;
+  imageHeadline: string;
+  bodyText: string;
   id?: string;
   [key: string]: unknown;
 };
 
 const DEFAULT_MAX_LENGTH = 300;
-const RESERVED_EVENT_KEYS = new Set(["name", "email", "id"]);
+const RESERVED_EVENT_KEYS = new Set([
+  "useCase",
+  "recipientName",
+  "recipientEmail",
+  "subject",
+  "imageHeadline",
+  "bodyText",
+  "id",
+]);
 const UNSAFE_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 const INSTRUCTION_PATTERNS = [
@@ -16,19 +28,23 @@ const INSTRUCTION_PATTERNS = [
   /<\s*\/?\s*(script|style|iframe)[^>]*>/gi,
 ];
 
-export function buildPrompt(event: WelcomeEvent): string {
-  const name = sanitizeForPrompt(event.name, 80);
+export function buildPrompt(event: EmailEvent): string {
+  const useCase = sanitizeForPrompt(event.useCase, 120);
+  const recipientName = sanitizeForPrompt(event.recipientName, 80);
+  const imageHeadline = sanitizeForPrompt(event.imageHeadline, 120);
   const extraContext = getExtraContext(event);
 
   return [
-    "Create a brand-aware welcome email hero image for a new customer.",
+    `Create a brand-aware email hero image for this use case: ${useCase}.`,
     "",
     "Render this exact headline as readable text inside the image:",
-    `"Welcome, ${name}"`,
+    `"${imageHeadline}"`,
     "",
-    "Use the brand identity from the provided brand session. Make the image warm, polished, and suitable as the top hero of a transactional welcome email.",
-    "Do not include extra copy, coupons, product claims, or placeholder logos.",
-    extraContext ? `\nAdditional signup context:\n${extraContext}` : "",
+    `Recipient name: ${recipientName}.`,
+    "Use the brand identity from the provided brand session.",
+    "Make the image polished and suitable for a transactional or lifecycle email.",
+    "Do not include unsupported claims, coupons, placeholder logos, or extra body copy.",
+    extraContext ? `\nAdditional context:\n${extraContext}` : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -47,7 +63,7 @@ export function sanitizeForPrompt(value: string, maxLength = DEFAULT_MAX_LENGTH)
     .slice(0, maxLength);
 }
 
-function getExtraContext(event: WelcomeEvent): string {
+function getExtraContext(event: EmailEvent): string {
   const lines: string[] = [];
 
   for (const [rawKey, rawValue] of Object.entries(event)) {

@@ -4,19 +4,28 @@ import { describe, it } from "node:test";
 import { buildPrompt, sanitizeForPrompt } from "../src/prompt";
 
 describe("buildPrompt", () => {
-  it("renders the welcome headline with the sanitized name", () => {
+  it("renders the configured image headline", () => {
     const prompt = buildPrompt({
-      name: "Maria",
-      email: "maria@example.com",
+      useCase: "subscription renewal",
+      recipientName: "Maria",
+      recipientEmail: "maria@example.com",
+      subject: "Your renewal is coming up",
+      imageHeadline: "Your renewal is almost here",
+      bodyText: "Review your plan before it renews.",
     });
 
-    assert.match(prompt, /"Welcome, Maria"/);
+    assert.match(prompt, /"Your renewal is almost here"/);
+    assert.match(prompt, /subscription renewal/);
   });
 
   it("injects extra event fields into the prompt", () => {
     const prompt = buildPrompt({
-      name: "Maria",
-      email: "maria@example.com",
+      useCase: "weekly report",
+      recipientName: "Maria",
+      recipientEmail: "maria@example.com",
+      subject: "Your report is ready",
+      imageHeadline: "Your weekly report is ready",
+      bodyText: "Open your report to see the latest results.",
       plan: "Pro",
       invitedBy: "Sam",
     });
@@ -25,16 +34,21 @@ describe("buildPrompt", () => {
     assert.match(prompt, /- invitedBy: Sam/);
   });
 
-  it("excludes reserved identity fields from extra context", () => {
+  it("excludes reserved fields from extra context", () => {
     const prompt = buildPrompt({
       id: "evt_123",
-      name: "Maria",
-      email: "maria@example.com",
+      useCase: "product education",
+      recipientName: "Maria",
+      recipientEmail: "maria@example.com",
+      subject: "Try this next",
+      imageHeadline: "Your next step",
+      bodyText: "Here is one thing to try today.",
       source: "web",
     });
 
     assert.doesNotMatch(prompt, /evt_123/);
     assert.doesNotMatch(prompt, /maria@example.com/);
+    assert.doesNotMatch(prompt, /Try this next/);
     assert.match(prompt, /- source: web/);
   });
 

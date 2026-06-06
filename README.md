@@ -14,17 +14,17 @@ No monorepo, no shared workspace setup, no hidden root install.
 
 ## Examples
 
-- [`resend-welcome-email`](./resend-welcome-email): generate a personalized, on-brand welcome hero with Bloom and send it through Resend.
+- [`resend-dynamic-email`](./resend-dynamic-email): generate an on-brand hero image for any email use case and send it through Resend.
 
 ## Point Your Agent At This
 
 Copy an example into your project and let your coding agent wire it up:
 
 ```text
-Integrate trybloomai/bloom-examples/resend-welcome-email into my app.
-Replace triggers/mock.ts with my real webhook, queue worker, or signup event.
-Call runWelcomeFlow({ name, email, plan }) from that trigger.
-Keep the runWelcomeFlow contract stable and do not touch src/prompt.ts sanitization.
+Integrate trybloomai/bloom-examples/resend-dynamic-email into my app.
+Replace triggers/mock.ts with my real webhook, queue worker, or product event.
+Call runEmailFlow({ useCase, recipientName, recipientEmail, subject, imageHeadline, bodyText }) from that trigger.
+Keep the runEmailFlow contract stable and do not remove src/prompt.ts sanitization.
 Keep my existing email-sending setup if I already have one.
 ```
 

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { getMockConfig } from "../src/config";
-import { runWelcomeFlow } from "../src/welcome-flow";
+import { runEmailFlow } from "../src/email-flow";
 
 const progressMessages = {
   validating: "Checking test event and environment...",
@@ -15,20 +15,24 @@ const progressMessages = {
 async function main() {
   const config = getMockConfig();
   const event = {
-    id: config.testEventId ?? `mock-user-${randomUUID()}`,
-    name: config.testName,
-    email: config.testEmail,
-    ...(config.extraContext ? { signupContext: config.extraContext } : {}),
+    id: config.testEventId ?? `mock-email-${randomUUID()}`,
+    useCase: config.testUseCase,
+    recipientName: config.testRecipientName,
+    recipientEmail: config.testRecipientEmail,
+    subject: config.testSubject,
+    imageHeadline: config.testImageHeadline,
+    bodyText: config.testBodyText,
+    ...(config.extraContext ? { extraContext: config.extraContext } : {}),
   };
 
-  const result = await runWelcomeFlow(event, {
+  const result = await runEmailFlow(event, {
     onProgress: (progress) => console.log(progressMessages[progress.step]),
   });
 
   console.log("Success: email sent.");
   console.log(JSON.stringify({
     ok: true,
-    sentTo: maskEmail(event.email),
+    sentTo: maskEmail(event.recipientEmail),
     imageUrl: result.imageUrl,
     emailId: result.emailId,
   }, null, 2));
@@ -43,3 +47,4 @@ main().catch((error: unknown) => {
   console.error(message);
   process.exitCode = 1;
 });
+

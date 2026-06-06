@@ -9,25 +9,28 @@ import {
   Text,
 } from "@react-email/components";
 
-export type WelcomeEmailProps = {
-  name: string;
+export type EmailTemplateProps = {
+  recipientName: string;
+  bodyText: string;
   imageCid: string;
 };
 
-export function WelcomeEmail({ name, imageCid }: WelcomeEmailProps) {
+export function EmailTemplate({
+  recipientName,
+  bodyText,
+  imageCid,
+}: EmailTemplateProps) {
   return (
     <Html>
       <Head />
-      <Preview>Welcome, {name}</Preview>
+      <Preview>{bodyText}</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section>
-            <Img src={`cid:${imageCid}`} alt={`Welcome, ${name}`} width="640" style={heroImage} />
+            <Img src={`cid:${imageCid}`} alt="" width="640" style={heroImage} />
           </Section>
-          <Text style={copy}>Hi {name},</Text>
-          <Text style={copy}>
-            Welcome. We are glad you are here and excited to help you get started.
-          </Text>
+          <Text style={copy}>Hi {recipientName},</Text>
+          <Text style={copy}>{bodyText}</Text>
         </Container>
       </Body>
     </Html>
