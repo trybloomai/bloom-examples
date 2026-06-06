@@ -3,7 +3,6 @@ export type EmailEvent = {
   recipientName: string;
   recipientEmail: string;
   subject: string;
-  imageHeadline: string;
   bodyText: string;
   id?: string;
   [key: string]: unknown;
@@ -31,20 +30,24 @@ const INSTRUCTION_PATTERNS = [
 export function buildPrompt(event: EmailEvent): string {
   const emailType = sanitizeForPrompt(event.emailType, 120);
   const recipientName = sanitizeForPrompt(event.recipientName, 80);
-  const imageHeadline = sanitizeForPrompt(event.imageHeadline, 120);
+  const subject = sanitizeForPrompt(event.subject, 160);
+  const bodyText = sanitizeForPrompt(event.bodyText, 240);
   const extraContext = getExtraContext(event);
 
   return [
-    `Create a brand-aware email hero image for this email type: ${emailType}.`,
+    "Create an on-brand hero image for an email.",
     "",
-    "Render this exact headline as readable text inside the image:",
-    `"${imageHeadline}"`,
-    "",
-    `Recipient name: ${recipientName}.`,
-    "Use the brand identity from the provided brand session.",
-    "Make the image polished and suitable for a transactional or lifecycle email.",
-    "Do not include unsupported claims, coupons, placeholder logos, or extra body copy.",
+    "Context:",
+    `- Email type: ${emailType}`,
+    `- Recipient name: ${recipientName}`,
+    `- Email subject: ${subject}`,
+    `- Email body: ${bodyText}`,
     extraContext ? `\nAdditional context:\n${extraContext}` : "",
+    "",
+    "\nTask:",
+    "Use the provided brand identity for visual style. Create an image suitable as the hero at the top of the email.",
+    "Decide whether short in-image text improves the result. If it does, write final concise copy based on the email context. If it does not, make the image text-free.",
+    "Avoid small text, fine print, placeholder text, unsupported claims, coupons, or extra body copy.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -76,7 +79,7 @@ function getExtraContext(event: EmailEvent): string {
       continue;
     }
 
-    const key = sanitizeForPrompt(rawKey, 50);
+    const key = formatContextKey(rawKey);
     if (!key) {
       continue;
     }
@@ -85,6 +88,14 @@ function getExtraContext(event: EmailEvent): string {
   }
 
   return lines.join("\n");
+}
+
+function formatContextKey(rawKey: string): string {
+  if (rawKey === "extraContext") {
+    return "Image guidance";
+  }
+
+  return sanitizeForPrompt(rawKey, 50);
 }
 
 function stringifyContextValue(value: unknown): string | undefined {
