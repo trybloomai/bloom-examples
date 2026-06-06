@@ -34,18 +34,18 @@ npm install
 cp .env.example .env
 ```
 
-Fill `.env`:
+`.env.example` already includes demo copy. After copying it to `.env`, replace the credentials and keep or edit the email values:
 
 ```env
-BLOOM_API_KEY=bloom_sk_...
-BLOOM_BRAND_SESSION_ID=...
-RESEND_API_KEY=re_...
-RECIPIENT_EMAIL=you@example.com
+BLOOM_API_KEY=bloom_sk_replace_me
+BLOOM_BRAND_SESSION_ID=replace_with_brand_id_from_bloom_url
+RESEND_API_KEY=re_replace_me
+RECIPIENT_EMAIL=delivered@resend.dev
 RECIPIENT_NAME=Maria
-EMAIL_TYPE=welcome email
-SUBJECT=Welcome!
-IMAGE_HEADLINE=Welcome, Maria
-BODY_TEXT=We are glad you are here.
+EMAIL_TYPE="welcome email"
+SUBJECT="Welcome to the family"
+IMAGE_HEADLINE="Welcome, Maria"
+BODY_TEXT="We are glad you are here."
 ```
 
 You need:
@@ -58,6 +58,21 @@ You need:
 To get the `brandSessionId`, open your brand in [Bloom](https://www.trybloom.ai/brands) and copy the ID from the URL. In `https://www.trybloom.ai/brand/<id>`, `<id>` is the value to paste into `BLOOM_BRAND_SESSION_ID`.
 
 For automated workflows, you can also [list your brands with the API](https://www.trybloom.ai/docs/api#get-a-brand-id) and copy any returned `id`.
+
+## Choose The Email Values
+
+Use plain text for the demo values. Quotes are optional, but helpful when a value has spaces.
+
+| Variable | What to put |
+| --- | --- |
+| `RECIPIENT_EMAIL` | The email address that receives the demo. Use `delivered@resend.dev` for a Resend test send, or your own address once your domain is ready. |
+| `RECIPIENT_NAME` | The recipient name used in the email greeting and available to the Bloom prompt. |
+| `EMAIL_TYPE` | The kind of email, like `welcome email`, `weekly report`, `receipt`, or `cart recovery`. This helps Bloom choose the right visual direction. |
+| `SUBJECT` | The normal email subject line. Resend uses this; Bloom does not render it in the image. |
+| `IMAGE_HEADLINE` | The exact text Bloom should render inside the generated image. Write the final text, not a placeholder. |
+| `BODY_TEXT` | The email body copy. The email template renders this below the image. |
+
+`IMAGE_HEADLINE` is not a template variable. If the image should say `Welcome, Maria`, pass `IMAGE_HEADLINE="Welcome, Maria"`. If your workflow needs a different name per recipient, build that string in your code before calling `runEmailFlow`.
 
 ## Run The Demo
 
