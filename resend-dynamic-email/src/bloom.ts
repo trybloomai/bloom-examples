@@ -60,7 +60,14 @@ export async function generateImage(prompt: string, config: AppConfig): Promise<
 }
 
 export async function waitForImage(generationId: string, config: AppConfig): Promise<CompletedImage> {
-  const timeoutSeconds = Math.max(1, Math.ceil(config.bloomTimeoutMs / 1000));
+  // The API rejects a `timeout` query above 295s. Cap the server-side poll wait
+  // there, independent of how long the client is willing to wait (bloomTimeoutMs)
+  // — otherwise raising BLOOM_TIMEOUT_MS past 295000 makes the request 400.
+  const MAX_WAIT_SECONDS = 295;
+  const timeoutSeconds = Math.min(
+    MAX_WAIT_SECONDS,
+    Math.max(1, Math.ceil(config.bloomTimeoutMs / 1000))
+  );
   const json = await bloomFetch<BloomGetImageResponse>(
     config,
     `images/${encodeURIComponent(generationId)}?wait=true&timeout=${timeoutSeconds}`,
