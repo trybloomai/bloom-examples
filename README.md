@@ -1,31 +1,58 @@
 # Bloom Examples
 
-Copyable examples for integrating Bloom into product workflows.
+Welcome to the Bloom examples repo.
 
-## How These Examples Work
+[![Bloom MCP](https://img.shields.io/badge/Bloom-MCP-111827)](https://trybloom.ai/mcp)
+[![Examples](https://img.shields.io/badge/GitHub-trybloomai%2Fexamples-24292f?logo=github)](https://github.com/trybloomai/examples)
+[![Templates](https://img.shields.io/badge/Templates-live-16a34a)](#templates)
+[![More Coming Soon](https://img.shields.io/badge/More-coming_soon-64748b)](#templates)
 
-Each folder is standalone: copy one example with `degit`, fill the required environment variables, install dependencies, and run it.
+![Bloom examples hero](./assets/api-hero.png)
 
-```text
-your trigger -> example hook -> Bloom image -> your downstream action
+This is where you can find ready-to-copy templates for adding Bloom to your own product.
+
+Each template shows a practical way to connect your app to Bloom, generate a branded image, and use it in a real product flow.
+
+## Templates
+
+These templates are live now:
+
+| Template | Use it for | Status |
+| --- | --- | --- |
+| [`resend-dynamic-email`](./resend-dynamic-email) | Adding generated brand images to dynamic emails. | Live |
+
+More coming soon.
+
+## How To Use A Template
+
+Each folder works on its own. Pick the template you want, copy it into your app, add the required keys, and connect it to the place where your app should call Bloom.
+
+You can copy a template with `degit`:
+
+```bash
+npx degit trybloomai/bloom-examples/<template-name> <your-folder-name>
 ```
 
-No monorepo, no shared workspace setup, no hidden root install.
+`degit` copies only that folder from GitHub. You get the template files without the rest of the repo.
 
-## Examples
+## What You Can Find Here
 
-- [`resend-dynamic-email`](./resend-dynamic-email): generate an on-brand hero image for any email use case and send it through Resend.
+- Setup instructions for each template
+- Required keys and setup steps
+- Example app events you can replace with your own
+- Prompting and integration code you can adapt to your product
+- Notes for running, testing, and shipping
 
 ## Point Your Agent At This
 
-Copy an example into your project and let your coding agent wire it up:
+You can also ask a coding agent to integrate a template for you:
 
 ```text
-Integrate trybloomai/bloom-examples/resend-dynamic-email into my app.
-Replace triggers/mock.ts with my real webhook, queue worker, or product event.
-Call runEmailFlow({ useCase, recipientName, recipientEmail, subject, imageHeadline, bodyText }) from that trigger.
-Keep the runEmailFlow contract stable and do not remove src/prompt.ts sanitization.
-Keep my existing email-sending setup if I already have one.
+Integrate one of the templates from trybloomai/bloom-examples into my app.
+Replace the mock event with my real app event.
+Keep my existing email, queue, or webhook setup where possible.
 ```
 
-Works with Claude Code, Cursor, or any coding agent with repo access.
+Works with Claude Code, Codex, Cursor, Windsurf, or any coding agent with repo access.
+
+More examples also live at [`trybloomai/examples`](https://github.com/trybloomai/examples).

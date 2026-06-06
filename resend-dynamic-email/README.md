@@ -6,7 +6,7 @@ Generate an on-brand hero image for any email use case, then send it through Res
 your trigger -> runEmailFlow(event) -> Bloom image -> Resend email
 ```
 
-Bloom renders your `imageHeadline` inside the generated image. The email use case, body copy, and extra fields are data you pass in.
+Bloom renders your `imageHeadline` inside the generated image. You pass in the email topic, recipient, subject, and body copy.
 
 ## The Only Function You Call
 
@@ -46,7 +46,7 @@ IMAGE_HEADLINE=Welcome, Maria
 BODY_TEXT=We are glad you are here.
 ```
 
-Those values drive the local demo. Change them to any email use case, or pass real values from your app when you replace the mock trigger.
+Those values power the local demo. Change them to match any email you want to send, or pass real values from your app.
 
 Then run:
 
@@ -54,7 +54,7 @@ Then run:
 npm run trigger
 ```
 
-`npm run trigger` calls external services and sends a real email. The CLI prints readable progress for validation, Bloom generation, image download, and Resend delivery. The final summary masks the recipient and never prints API keys.
+`npm run trigger` calls Bloom and Resend, then sends a real email. The terminal shows each step and never prints API keys.
 
 The email includes a unique `X-Entity-Ref-ID` header so repeated test sends do not collapse into one Gmail thread.
 
@@ -67,13 +67,13 @@ The email includes a unique `X-Entity-Ref-ID` header so repeated test sends do n
 
 ## Extra Context
 
-`EXTRA_CONTEXT` is optional and only used by the mock trigger. It is a plain string, not JSON.
+`EXTRA_CONTEXT` is optional. Use it only for quick local tests. It is plain text, not JSON.
 
 ```env
 EXTRA_CONTEXT=Customer is on the Pro plan; signup source: webinar.
 ```
 
-In a real integration, pass structured fields directly:
+In your app, pass fields directly:
 
 ```ts
 await runEmailFlow({
@@ -89,16 +89,16 @@ await runEmailFlow({
 });
 ```
 
-Core fields are not repeated as extra context. Additional fields are sanitized and included in the Bloom prompt, so avoid sending unnecessary PII.
+Extra fields are added to the Bloom prompt after simple cleanup. Do not send private customer data unless the image truly needs it.
 
 ## Swap In Your Stack
 
-There are two integration points:
+There are two places you will usually edit:
 
-1. Replace `triggers/mock.ts` with your real webhook, queue worker, cron job, or product event.
+1. Replace `triggers/mock.ts` with the place in your app that should send the email.
 2. Replace `src/emails/email-template.tsx` if you already have your own email template.
 
-Keep `runEmailFlow(event)` as the boundary. It validates the event, builds the sanitized prompt, asks Bloom for the image, downloads it, and sends the email.
+Keep calling `runEmailFlow(event)`. It checks the input, writes the Bloom prompt, asks Bloom for the image, downloads it, and sends the email.
 
 Example route handler:
 
@@ -122,9 +122,9 @@ export async function POST(request: Request) {
 }
 ```
 
-Pass a stable `event.id` when you have one. Resend receives it as the idempotency key. In production, also dedupe that event id in your own store before generating the image.
+Pass an `event.id` when your app already has one. Resend uses it to avoid sending the same email twice.
 
-`event.id` is also used for the hidden `X-Entity-Ref-ID` email header, which helps Gmail keep repeated transactional sends as separate conversations. If there is no `event.id`, the example generates a fresh value.
+`event.id` is also used for the hidden `X-Entity-Ref-ID` email header, which helps Gmail keep repeated test emails as separate conversations. If there is no `event.id`, the example creates one.
 
 ## Point Your Agent At This
 
@@ -134,7 +134,7 @@ Copy this example into your project and let your coding agent wire it up:
 Integrate trybloomai/bloom-examples/resend-dynamic-email into my app.
 Replace triggers/mock.ts with my real webhook, queue worker, or product event.
 Call runEmailFlow({ useCase, recipientName, recipientEmail, subject, imageHeadline, bodyText }) from that trigger.
-Keep the runEmailFlow contract stable and do not remove src/prompt.ts sanitization.
+Keep using runEmailFlow and do not remove the cleanup in src/prompt.ts.
 Keep my existing email-sending setup if I already have one.
 ```
 
@@ -153,18 +153,18 @@ EVENT_ID=
 EXTRA_CONTEXT=
 ```
 
-`EVENT_ID` is only needed when you want a stable idempotency key. The mock trigger generates a fresh event id by default so repeated demo runs do not collide in Resend.
+`EVENT_ID` is only needed when you want repeated demo runs to reuse the same email id. By default, the demo creates a fresh id each time.
 
 Use `onboarding@resend.dev` only for testing. In production, set `FROM_EMAIL` to an address on your verified sending domain.
 
 ## Production Notes
 
 - Verify your sending domain in Resend before sending to real users.
-- Treat fields sent to Bloom as prompt data. Avoid unnecessary PII in extra event fields.
-- Add your own retry/backoff around transient `429` and `5xx` failures.
-- Keep `BLOOM_TIMEOUT_MS` under the maximum request duration of your runtime.
-- Add monitoring around generation failures, email failures, and duplicate event ids.
-- If your product needs a fallback image, provide it in your own application flow. This example fails loudly instead of sending a generic email.
+- Only send Bloom the fields needed to make the image.
+- Retry later if Bloom or Resend is temporarily unavailable.
+- Keep `BLOOM_TIMEOUT_MS` lower than the maximum time your app can wait for a request.
+- Track image failures, email failures, and repeated email ids.
+- If your product needs a backup image, add it in your own app. This example stops instead of sending a generic email.
 
 ## Troubleshooting
 
@@ -173,7 +173,7 @@ Use `onboarding@resend.dev` only for testing. In production, set `FROM_EMAIL` to
 - `INSUFFICIENT_CREDITS`: add credits in Bloom.
 - `TOO_MANY_REQUESTS`: back off and retry later.
 - Resend domain errors: use `onboarding@resend.dev` for sandbox or verify your production domain.
-- Timeout errors: increase `BLOOM_TIMEOUT_MS` or move the trigger to a longer-running worker.
+- Timeout errors: increase `BLOOM_TIMEOUT_MS` or run this from a part of your app that can wait longer.
 
 ## Verification
 
