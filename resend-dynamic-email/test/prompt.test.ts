@@ -6,7 +6,7 @@ import { buildPrompt, sanitizeForPrompt } from "../src/prompt";
 describe("buildPrompt", () => {
   it("renders the configured image headline", () => {
     const prompt = buildPrompt({
-      useCase: "subscription renewal",
+      emailType: "subscription renewal",
       recipientName: "Maria",
       recipientEmail: "maria@example.com",
       subject: "Your renewal is coming up",
@@ -20,7 +20,7 @@ describe("buildPrompt", () => {
 
   it("injects extra event fields into the prompt", () => {
     const prompt = buildPrompt({
-      useCase: "weekly report",
+      emailType: "weekly report",
       recipientName: "Maria",
       recipientEmail: "maria@example.com",
       subject: "Your report is ready",
@@ -37,7 +37,7 @@ describe("buildPrompt", () => {
   it("excludes reserved fields from extra context", () => {
     const prompt = buildPrompt({
       id: "evt_123",
-      useCase: "product education",
+      emailType: "product education",
       recipientName: "Maria",
       recipientEmail: "maria@example.com",
       subject: "Try this next",
@@ -64,4 +64,3 @@ describe("buildPrompt", () => {
     assert.equal(sanitized.length, 120);
   });
 });
-

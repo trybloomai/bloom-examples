@@ -7,6 +7,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "prompt": "tsx scripts/preview-prompt.ts",
     "trigger": "tsx triggers/mock.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts"

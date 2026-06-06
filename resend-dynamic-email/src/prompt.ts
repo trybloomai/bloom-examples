@@ -1,5 +1,5 @@
 export type EmailEvent = {
-  useCase: string;
+  emailType: string;
   recipientName: string;
   recipientEmail: string;
   subject: string;
@@ -11,7 +11,7 @@ export type EmailEvent = {
 
 const DEFAULT_MAX_LENGTH = 300;
 const RESERVED_EVENT_KEYS = new Set([
-  "useCase",
+  "emailType",
   "recipientName",
   "recipientEmail",
   "subject",
@@ -29,13 +29,13 @@ const INSTRUCTION_PATTERNS = [
 ];
 
 export function buildPrompt(event: EmailEvent): string {
-  const useCase = sanitizeForPrompt(event.useCase, 120);
+  const emailType = sanitizeForPrompt(event.emailType, 120);
   const recipientName = sanitizeForPrompt(event.recipientName, 80);
   const imageHeadline = sanitizeForPrompt(event.imageHeadline, 120);
   const extraContext = getExtraContext(event);
 
   return [
-    `Create a brand-aware email hero image for this use case: ${useCase}.`,
+    `Create a brand-aware email hero image for this email type: ${emailType}.`,
     "",
     "Render this exact headline as readable text inside the image:",
     `"${imageHeadline}"`,
@@ -110,4 +110,3 @@ function stringifyContextValue(value: unknown): string | undefined {
     return undefined;
   }
 }
-

@@ -16,7 +16,7 @@ async function main() {
   const config = getMockConfig();
   const event = {
     id: config.eventId ?? `mock-email-${randomUUID()}`,
-    useCase: config.useCase,
+    emailType: config.emailType,
     recipientName: config.recipientName,
     recipientEmail: config.recipientEmail,
     subject: config.subject,
