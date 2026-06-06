@@ -34,7 +34,7 @@ More coming soon at [`trybloom.ai/examples`](https://trybloom.ai/examples).
 
 ## How To Use A Template
 
-Each folder works on its own. Copy the one you need into your app, install its dependencies, add the required keys, and connect it to the place where your app should call Bloom.
+Each folder works on its own. Copy the one you need into your workflow or system, install its dependencies, add the required keys, and connect it to the place where it should call Bloom.
 
 You can copy a template with `degit`:
 
@@ -48,17 +48,17 @@ npx degit trybloomai/bloom-examples/<template-name> <your-folder-name>
 
 - Setup steps for each template
 - Required Bloom and service keys
-- Demo events you can replace with your own app events
+- Demo events you can replace with your own workflow events
 - Prompt and integration code you can edit
 - Notes for testing and shipping
 
 ## Point Your Agent At This
 
-You can also ask a coding agent to wire a template into your app:
+You can also ask a coding agent to wire a template into your workflow:
 
 ```text
-Integrate one of the templates from trybloomai/bloom-examples into my app.
-Replace the demo event with my real app event.
+Integrate one of the templates from trybloomai/bloom-examples into my workflow.
+Replace the demo event with my real workflow event.
 Keep my existing email, queue, or webhook setup where possible.
 ```
 
