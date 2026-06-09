@@ -1,0 +1,29 @@
+n8n-content-repurposing/README.md
+  s_09bde306c3ee23::t_0cc06a38826375 20
+  s_09bde306c3ee23::t_1a8a8254c52d00 15
+  s_09bde306c3ee23::t_5fa19bdcc9dec1 92
+  s_09bde306c3ee23::t_ad508e1d53a8c1 21
+  s_09bde306c3ee23::t_b21a81b284ff10 130
+  s_09bde306c3ee23::t_dfb373369d15ba 35
+  s_09bde306c3ee23::t_f658827c9c62d6 19
+  s_09bde306c3ee23::t_296e6cd09a18db 25
+  s_09bde306c3ee23::t_b32e6ad5df8141 39
+n8n-content-repurposing/workflow.json
+  s_09bde306c3ee23::t_deafadca687570 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "30078b31760eb15b6a4b35012a4edad7631e6488",
+  "prompts": {},
+  "sessions": {
+    "s_09bde306c3ee23": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dfa72017-762d-47a4-84a7-a72bec1c5475",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
