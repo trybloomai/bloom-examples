@@ -179,32 +179,6 @@
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
       "position": [1300, 300]
-    },
-    {
-      "parameters": {
-        "content": "## Plan the copy",
-        "height": 90,
-        "width": 250,
-        "color": 4
-      },
-      "id": "c0a00000-0000-4000-8000-00000000000b",
-      "name": "Sticky: Claude",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [-80, 440]
-    },
-    {
-      "parameters": {
-        "content": "## Generate the images",
-        "height": 90,
-        "width": 660,
-        "color": 5
-      },
-      "id": "c0a00000-0000-4000-8000-00000000000c",
-      "name": "Sticky: Bloom",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [380, 440]
     }
   ],
   "connections": {
