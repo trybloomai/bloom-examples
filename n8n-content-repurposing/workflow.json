@@ -1,0 +1,240 @@
+{
+  "name": "Bloom — Content repurposing (blog → main image + 3 socials)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c0a00000-0000-4000-8000-000000000001",
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-460, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0000000-0000-4000-8000-000000000010",
+              "name": "title",
+              "value": "How consistent branding compounds over time",
+              "type": "string"
+            },
+            {
+              "id": "a0000000-0000-4000-8000-000000000011",
+              "name": "body",
+              "value": "Most teams treat brand as a one-time project: pick a logo, set a palette, write a voice doc, then move on. But brand is not a deliverable, it is a system that pays off every time someone sees you. The teams that win are the ones whose every email, ad, post, and landing page feels like it came from the same place. That consistency is what turns scattered impressions into recognition, and recognition into trust. The hard part is that consistency does not scale by hand. As soon as you publish across email, Instagram, LinkedIn, and X, every channel wants a different size, a different tone, and a different crop, and the brand quietly drifts. The fix is to make on-brand the default output of your tools, not a manual review step at the end. When the brand layer is something your systems can call, every piece of content ships on-brand without a designer in the loop.",
+              "type": "string"
+            },
+            {
+              "id": "a0000000-0000-4000-8000-000000000012",
+              "name": "url",
+              "value": "https://example.com/blog/consistent-branding-compounds",
+              "type": "string"
+            },
+            {
+              "id": "a0000000-0000-4000-8000-000000000013",
+              "name": "author",
+              "value": "The Bloom Team",
+              "type": "string"
+            },
+            {
+              "id": "a0000000-0000-4000-8000-000000000014",
+              "name": "brand_session_id",
+              "value": "REPLACE_WITH_YOUR_BRAND_SESSION_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-000000000002",
+      "name": "Mock blog post",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 2000,\n  \"tools\": [\n    {\n      \"name\": \"plan_content\",\n      \"description\": \"Plan on-brand repurposed content for a blog post across a main blog image and three social platforms.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"main\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short headline for the main blog image.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the main blog image (composition, mood, subject). Do not specify colors or fonts; the brand identity supplies those.\" }\n            },\n            \"required\": [\"headline\", \"image_prompt\"]\n          },\n          \"instagram\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"Instagram caption adapted to the audience, conversational, with a few relevant hashtags.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the Instagram image.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          },\n          \"linkedin\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"LinkedIn caption with a professional, insight-driven tone.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the LinkedIn image.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          },\n          \"twitter\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"Concise tweet under 280 characters.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the Twitter/X image.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          }\n        },\n        \"required\": [\"main\", \"instagram\", \"linkedin\", \"twitter\"]\n      }\n    }\n  ],\n  \"tool_choice\": { \"type\": \"tool\", \"name\": \"plan_content\" },\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\"You are a brand marketing assistant. Repurpose the following blog post into on-brand visual content. Produce a main blog image plan plus a caption and image plan for Instagram, LinkedIn, and Twitter/X. Adapt each caption to that platform's audience and tone. Keep every headline short enough to render legibly inside an image.\\n\\nBlog title: \" + $json.title + \"\\nAuthor: \" + ($json.author || \"unknown\") + \"\\nURL: \" + ($json.url || \"\") + \"\\n\\nBlog body:\\n\" + $json.body) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-000000000003",
+      "name": "Plan content (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-20, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_ANTHROPIC_CREDENTIAL",
+          "name": "Anthropic API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read Claude's structured tool_use output (guaranteed JSON, no text parsing)\nconst msg = $input.first().json;\nconst toolUse = (msg.content || []).find((block) => block.type === 'tool_use');\nif (!toolUse || !toolUse.input) {\n  throw new Error('Claude did not return a plan_content tool_use block.');\n}\nconst plan = toolUse.input;\n\n// Brand + render guidance appended to every image prompt.\nconst BRAND_GUIDANCE =\n  'Use the brand identity for all visual style, colors, and typography. ' +\n  'Render the headline inside the image, bold and legible. ' +\n  'One clear focal point. No fine print, no placeholder text, no watermark, no busy layout.';\n\n// Aspect ratio + output filename are assigned deterministically per platform.\nconst platforms = [\n  { platform: 'main',      aspectRatio: '16:9', filename: 'blog-main.png', plan: plan.main },\n  { platform: 'instagram', aspectRatio: '4:5',  filename: 'instagram.png', plan: plan.instagram },\n  { platform: 'linkedin',  aspectRatio: '1:1',  filename: 'linkedin.png',  plan: plan.linkedin },\n  { platform: 'twitter',   aspectRatio: '16:9', filename: 'twitter.png',   plan: plan.twitter },\n];\n\nreturn platforms.map((p) => {\n  if (!p.plan) {\n    throw new Error(`Claude plan is missing the \"${p.platform}\" section.`);\n  }\n  return {\n    json: {\n      platform: p.platform,\n      aspectRatio: p.aspectRatio,\n      filename: p.filename,\n      headline: p.plan.headline,\n      caption: p.plan.caption || '',\n      image_prompt: `${p.plan.image_prompt}\\n\\nHeadline to render in image: \"${p.plan.headline}\".\\n${BRAND_GUIDANCE}`,\n    },\n  };\n});\n"
+      },
+      "id": "c0a00000-0000-4000-8000-000000000004",
+      "name": "Build platform jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.trybloom.ai/api/v1/images/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ JSON.stringify($('Mock blog post').first().json.brand_session_id || '') }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-000000000005",
+      "name": "Bloom: generate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [420, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
+          "name": "Bloom API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.trybloom.ai/api/v1/images/{{ $json.data.ids?.[0] ?? $json.data.imageIds?.[0] }}?wait=true&timeout=295",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "c0a00000-0000-4000-8000-000000000006",
+      "name": "Bloom: wait",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
+          "name": "Bloom API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.status === 'completed' && $json.data.imageUrl ? $json.data.imageUrl : (() => { throw new Error('Bloom image not ready (status: ' + ($json.data.status || 'unknown') + '). Increase the wait timeout or check the generation.'); })() }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "c0a00000-0000-4000-8000-000000000007",
+      "name": "Download image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Label each downloaded image with its platform filename so the ZIP is readable,\n// and carry the caption/headline alongside the binary as metadata.\nconst jobs = $('Build platform jobs').all();\nreturn $input.all().map((item, i) => {\n  const job = jobs[i].json;\n  const binary = item.binary.data;\n  binary.fileName = job.filename;\n  return {\n    json: {\n      platform: job.platform,\n      filename: job.filename,\n      aspectRatio: job.aspectRatio,\n      headline: job.headline,\n      caption: job.caption,\n    },\n    binary: { data: binary },\n  };\n});\n"
+      },
+      "id": "c0a00000-0000-4000-8000-000000000008",
+      "name": "Label files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "binaryPropertyName": "data",
+        "outputFormat": "zip",
+        "fileName": "content-cards.zip",
+        "binaryPropertyOutput": "data"
+      },
+      "id": "c0a00000-0000-4000-8000-000000000009",
+      "name": "Package ZIP",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "content": "## Plan the copy",
+        "height": 90,
+        "width": 250,
+        "color": 4
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000b",
+      "name": "Sticky: Claude",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-80, 440]
+    },
+    {
+      "parameters": {
+        "content": "## Generate the images",
+        "height": 90,
+        "width": 660,
+        "color": 5
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000c",
+      "name": "Sticky: Bloom",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [380, 440]
+    }
+  ],
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [[{ "node": "Mock blog post", "type": "main", "index": 0 }]]
+    },
+    "Mock blog post": {
+      "main": [[{ "node": "Plan content (Claude)", "type": "main", "index": 0 }]]
+    },
+    "Plan content (Claude)": {
+      "main": [[{ "node": "Build platform jobs", "type": "main", "index": 0 }]]
+    },
+    "Build platform jobs": {
+      "main": [[{ "node": "Bloom: generate", "type": "main", "index": 0 }]]
+    },
+    "Bloom: generate": {
+      "main": [[{ "node": "Bloom: wait", "type": "main", "index": 0 }]]
+    },
+    "Bloom: wait": {
+      "main": [[{ "node": "Download image", "type": "main", "index": 0 }]]
+    },
+    "Download image": {
+      "main": [[{ "node": "Label files", "type": "main", "index": 0 }]]
+    },
+    "Label files": {
+      "main": [[{ "node": "Package ZIP", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

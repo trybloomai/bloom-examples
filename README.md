@@ -29,6 +29,7 @@ These templates are live now:
 | Service | Template | Use it for | Status |
 | --- | --- | --- | --- |
 | <img src="assets/logos/resend.svg" alt="" height="18" align="absmiddle" /> Resend | [`resend-dynamic-email`](./resend-dynamic-email) | Send dynamic emails with images generated from your Bloom brand. | Live |
+| <img src="assets/logos/n8n.svg" alt="" height="18" align="absmiddle" /> n8n | [`n8n-content-repurposing`](./n8n-content-repurposing) | Repurpose one blog post into on-brand images for the blog and Instagram, LinkedIn, and X. | Live |
 
 More coming soon at [`trybloom.ai/templates`](https://trybloom.ai/templates).
 
