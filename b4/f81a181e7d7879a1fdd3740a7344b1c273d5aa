@@ -1,0 +1,51 @@
+n8n-content-repurposing/.gitignore
+  s_6c6217b5f945a0::t_ee9afc5666a0d0 1-3
+README.md
+  s_6c6217b5f945a0::t_6c24dd6163629c 32
+n8n-content-repurposing/workflow.json
+  s_6c6217b5f945a0::t_8ac2a22a6ec6c8 1,3-38,45-59,62-72,74-79,87-89,91-101,104-105,107-112,120-123,126-133,141-143,145-181,208-240
+  s_6c6217b5f945a0::t_b344a6dc7f409b 39-44
+  s_6c6217b5f945a0::t_4b3355e9fffc4a 102-103,106,113-119
+  s_6c6217b5f945a0::t_e62ed4269ac1ff 90
+  s_6c6217b5f945a0::t_9422a595d84824 60-61,73
+  s_6c6217b5f945a0::t_e9f4bd457f8917 2
+  s_6c6217b5f945a0::t_9ae565e905c634 124-125,134-140
+  s_6c6217b5f945a0::t_e7c4b607ef850d 182-184,187-193,195-197,200-206
+  s_6c6217b5f945a0::t_c4dff94f844490 80-86
+  s_6c6217b5f945a0::t_83b93757b622a4 144
+  s_6c6217b5f945a0::t_d4a30305abf84f 185-186,194,198-199,207
+assets/logos/n8n.svg
+  s_6c6217b5f945a0::t_2beb5a1e72839b 1
+n8n-content-repurposing/README.md
+  s_6c6217b5f945a0::t_7756e1412b3da6 138-139
+  s_6c6217b5f945a0::t_9d1157ac990d3c 1-4,6-8,10-14,16,23-24,26,45,47,49,58,60,62-72,74-80,82-124,127-137,140-141,145-147,150
+  s_6c6217b5f945a0::t_ca4956ca811848 151
+  s_6c6217b5f945a0::t_ebb1f3138bffb1 15,51,56
+  s_6c6217b5f945a0::t_905bbb242a4ef5 5
+  s_6c6217b5f945a0::t_e617c28bc6519a 9
+  s_6c6217b5f945a0::t_bc47c9d8d05921 17-22,25,27,29,31-33,35,37
+  s_6c6217b5f945a0::t_606696b55bef00 73
+  s_6c6217b5f945a0::t_be0388a2ff07c7 81
+  s_6c6217b5f945a0::t_6586d833bfb4a5 126
+  s_6c6217b5f945a0::t_7d07cd3fdadf8a 148-149
+  s_6c6217b5f945a0::t_4a0b07ae896e9c 125
+  s_6c6217b5f945a0::t_31c899128940f8 57
+  s_6c6217b5f945a0::t_859552f49e5841 28,30,34,36,38-44,46,48,50,52-55,59,61
+  s_6c6217b5f945a0::t_a19d7ac0f210fc 142-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "b4f81a181e7d7879a1fdd3740a7344b1c273d5aa",
+  "prompts": {},
+  "sessions": {
+    "s_6c6217b5f945a0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2d27dfce-e436-42ec-bb3f-bc041df08faa",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
