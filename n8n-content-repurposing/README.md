@@ -12,17 +12,17 @@ blog post -> Claude plans copy -> Bloom images -> content-cards.zip
                                    └─ Twitter/X   16:9
 ```
 
-Everything runs in n8n. Bloom and Claude are called over plain HTTP, authenticated with native n8n credentials — no files to edit, no restart.
+Everything runs in n8n. Bloom and Claude are called over plain HTTP, authenticated with native n8n credentials: no files to edit, no restart.
 
 ## Prerequisites
 
-- **A running n8n instance** — [n8n Cloud](https://n8n.io/cloud/) (hosted, nothing to install) or [self-hosted](https://docs.n8n.io/hosting/). Built and tested on n8n 2.23.x.
-- **A Bloom API key and a brand id** — get the key from [Bloom settings](https://www.trybloom.ai/settings). For the brand id, open your brand in [Bloom](https://www.trybloom.ai/brands) and copy the `<id>` from the URL `https://www.trybloom.ai/brand/<id>`. (For automation you can also [list brands via the API](https://www.trybloom.ai/docs/api#get-a-brand-id) and copy any returned `id`.)
-- **An Anthropic API key** — from the [Anthropic Console](https://console.anthropic.com/settings/keys).
+- **A running n8n instance**: [n8n Cloud](https://n8n.io/cloud/) (hosted, nothing to install) or [self-hosted](https://docs.n8n.io/hosting/). Built and tested on n8n 2.23.x.
+- **A Bloom API key and a brand id**: get the key from [Bloom settings](https://www.trybloom.ai/settings). For the brand id, open your brand in [Bloom](https://www.trybloom.ai/brands) and copy the `<id>` from the URL `https://www.trybloom.ai/brand/<id>`. (For automation you can also [list brands via the API](https://www.trybloom.ai/docs/api#get-a-brand-id) and copy any returned `id`.)
+- **An Anthropic API key**: from the [Anthropic Console](https://console.anthropic.com/settings/keys).
 
 ## Setup
 
-Everything is done in the n8n UI — no `docker-compose`, no environment variables.
+Everything is done in the n8n UI: no `docker-compose`, no environment variables.
 
 **1. Import the workflow**
 
@@ -32,11 +32,11 @@ The repo is public, so the easiest path is **Import from URL**. In n8n, create a
 https://raw.githubusercontent.com/trybloomai/bloom-examples/main/n8n-content-repurposing/workflow.json
 ```
 
-> Both import options live inside that **⋯** menu — they are not buttons on the main screen. Prefer the files on disk? Run `npx degit trybloomai/bloom-examples/n8n-content-repurposing` first, then use **Import from File…** instead.
+> Both import options live inside that **⋯** menu; they are not buttons on the main screen. Prefer the files on disk? Run `npx degit trybloomai/bloom-examples/n8n-content-repurposing` first, then use **Import from File…** instead.
 
 **2. Add the Bloom credential**
 
-Double-click the **Bloom: generate** node. At the top of the node there is a **Credential to connect with** field — open its dropdown and click **+ Create new credential**. n8n opens a **Header Auth** credential form. Fill it in exactly:
+Double-click the **Bloom: generate** node. At the top of the node there is a **Credential to connect with** field. Open its dropdown and click **+ Create new credential**. n8n opens a **Header Auth** credential form. Fill it in exactly:
 
 | Field | Value |
 | --- | --- |
@@ -89,7 +89,7 @@ File extensions follow the image format Bloom actually serves (typically PNG), s
 
 Click **Test workflow**. The chain runs:
 
-1. **Plan content (Claude)** returns a guaranteed-structured plan using [tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use) — no "please reply in JSON", no text parsing.
+1. **Plan content (Claude)** returns a guaranteed-structured plan using [tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use): no "please reply in JSON", no text parsing.
 2. **Build platform jobs** turns that plan into 4 jobs, one per platform, with the aspect ratio assigned deterministically.
 3. **Bloom: generate → wait → download** runs once per job and produces 4 on-brand images.
 4. **Package ZIP** bundles them into `content-cards.zip`.
@@ -127,7 +127,7 @@ Works with Claude Code, Codex, Cursor, Windsurf, or any coding agent with repo a
 - **`imageSize`** in the Bloom nodes: `2K` (default, 1 credit) or `4K` (2 credits). There is no cheaper-than-`2K` option, so to cut cost use a lighter `model` tier instead.
 - **Claude model**: edit the `model` field in the **Plan content (Claude)** node; defaults to `claude-sonnet-4-6`.
 
-Bloom also exposes `resize` and `edit` endpoints if you want to derive more crops from one base image or tweak it later — a natural next step, not part of this base flow.
+Bloom also exposes `resize` and `edit` endpoints if you want to derive more crops from one base image or tweak it later, a natural next step that is not part of this base flow.
 
 ## Before Shipping
 
