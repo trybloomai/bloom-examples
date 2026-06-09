@@ -144,6 +144,7 @@ Bloom also exposes `resize` and `edit` endpoints if you want to derive more crop
 - Claude `401` / `authentication_error`: check the Anthropic credential.
 - Node shows "credentials not set" (highlighted after import): open it and select the Header Auth credential you created.
 - `Invalid brand session ID`: paste a valid brand id into `brand_session_id` in the **Mock blog post** node.
+- `Bad request - please check your parameters` / `Input validation failed` on **Bloom: generate**: the `brand_session_id` value is missing or not a valid brand id. Fix it in the **Mock blog post** node.
 
 ## Verification
 
