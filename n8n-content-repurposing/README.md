@@ -28,7 +28,7 @@ Everything is done in the n8n UI — no `docker-compose`, no environment variabl
 
 The repo is public, so the easiest path is **Import from URL**. In n8n, create a new workflow, open the **⋯** menu in the **top-right corner** of the canvas, choose **Import from URL…**, and paste:
 
-```
+```text
 https://raw.githubusercontent.com/trybloomai/bloom-examples/main/n8n-content-repurposing/workflow.json
 ```
 
@@ -45,7 +45,7 @@ Double-click the **Bloom: generate** node. At the top of the node there is a **C
 
 Save it. Now double-click the **Bloom: wait** node and, in the same **Credential to connect with** field, just **select the credential you created** (don't make a new one).
 
-**4. Add the Anthropic credential**
+**3. Add the Anthropic credential**
 
 Double-click the **Plan content (Claude)** node, open its **Credential to connect with** dropdown, and **+ Create new credential** the same way:
 

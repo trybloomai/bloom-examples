@@ -120,7 +120,7 @@
     },
     {
       "parameters": {
-        "url": "=https://www.trybloom.ai/api/v1/images/{{ $json.data.ids?.[0] ?? $json.data.imageIds?.[0] }}?wait=true&timeout=295",
+        "url": "={{ (() => { const imageId = $json.data?.ids?.[0] ?? $json.data?.imageIds?.[0]; if (!imageId) { throw new Error('Bloom generate response is missing an image id.'); } return `https://www.trybloom.ai/api/v1/images/${imageId}?wait=true&timeout=295`; })() }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {
