@@ -83,6 +83,8 @@ Claude writes a headline, a caption, and an image plan per platform. Bloom rende
 | LinkedIn | `1:1` | Professional, insight-driven | `linkedin.png` |
 | Twitter/X | `16:9` | Concise, under 280 chars | `twitter.png` |
 
+File extensions follow the image format Bloom actually serves (typically PNG), so the names may end in `.jpg` or `.webp` instead.
+
 ## Run The Demo
 
 Click **Test workflow**. The chain runs:
@@ -104,7 +106,7 @@ Replace the **Mock blog post** node with where your posts actually come from:
 
 Just keep emitting the same fields (`title`, `body`, `url`, `author`) into **Plan content (Claude)**.
 
-To add or remove a platform, edit the `platforms` array in **Build platform jobs** and the tool schema in **Plan content (Claude)**. Aspect ratio and output filename live next to each platform in that array.
+To add or remove a platform, edit the `platforms` array in **Build platform jobs** and the tool schema in **Plan content (Claude)**. Aspect ratio and output file name (extension is derived from the served format) live next to each platform in that array.
 
 ## Point Your Agent At This
 
