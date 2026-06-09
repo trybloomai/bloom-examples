@@ -36,18 +36,18 @@ https://raw.githubusercontent.com/trybloomai/bloom-examples/main/n8n-content-rep
 
 **2. Add the Bloom credential**
 
-Double-click the **Bloom: generate** node. At the top of the node there is a **Credential to connect with** field. Open its dropdown and click **+ Create new credential**. n8n opens a **Header Auth** credential form. Fill it in exactly:
+Double-click the **Bloom: generate** node. Below the **Authentication** dropdowns there is a **Header Auth** field. Open its dropdown and click **+ Create new credential**. n8n opens a **Header Auth** credential form. Fill it in exactly:
 
 | Field | Value |
 | --- | --- |
 | **Name** | `x-api-key` |
 | **Value** | your Bloom API key |
 
-Save it. Now double-click the **Bloom: wait** node and, in the same **Credential to connect with** field, just **select the credential you created** (don't make a new one).
+Save it. Now double-click the **Bloom: wait** node and, in its **Header Auth** field, just **select the credential you created** (don't make a new one).
 
 **3. Add the Anthropic credential**
 
-Double-click the **Plan content (Claude)** node, open its **Credential to connect with** dropdown, and **+ Create new credential** the same way:
+Double-click the **Plan content (Claude)** node, open the dropdown of its **Header Auth** field (below the **Authentication** dropdowns), and **+ Create new credential** the same way:
 
 | Field | Value |
 | --- | --- |
