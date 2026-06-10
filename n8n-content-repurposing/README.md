@@ -4,7 +4,7 @@ Turn one blog post into on-brand visual content for every channel, in one run.
 
 This n8n workflow takes a blog post, asks Claude to plan platform-specific copy, then calls Bloom to generate an on-brand image for each channel. You get the main blog image plus an adapted caption and a correctly-sized image for Instagram, LinkedIn, and Twitter/X. The text already gets repurposed everywhere; the on-brand image is the part nobody automates.
 
-Out of the box the demo writes its own blog post from your brand, so the first run is coherent for any brand with zero content to prepare. In production you swap the demo-post nodes for your real blog source (see [Pass Your Own Data](#pass-your-own-data)).
+Out of the box the demo researches your brand on the web and writes its own blog post about something real and recent, so the first run is coherent for any brand with zero content to prepare. In production you swap the demo-post nodes for your real blog source (see [Pass Your Own Data](#pass-your-own-data)).
 
 ```text
 brand id -> fetch brand -> Claude writes demo post -> Claude plans copy -> Bloom images -> content-cards.zip
@@ -82,7 +82,7 @@ Double-click the **Brand config** node and paste your brand id into the `brand_s
 
 ## The Demo Post
 
-The demo writes its own input: **Bloom: get brand** fetches your brand's name and website (failing fast on a bad brand id), **Write demo post (Claude)** writes a short fictional post that fits the brand, and **Adopt demo post** reshapes it into the `title`, `body`, `url`, `author` fields a real source would emit. The post is deliberately generic and not meant to be published; its only job is to make the first run coherent with *your* brand.
+The demo writes its own input: **Bloom: get brand** fetches your brand's name and website, **Write demo post (Claude)** researches the brand with web search and writes a short post about one specific, recent, real topic it found (a launch, a product, an announcement), and **Adopt demo post** reshapes it into the `title`, `body`, `url`, `author` fields a real source would emit. Every claim is grounded in what the search found, but it is still generated content: skim it before treating it as publishable.
 
 ## What Each Platform Gets
 
@@ -143,7 +143,7 @@ Bloom also exposes `resize` and `edit` endpoints if you want to derive more crop
 
 - When the trigger is RSS/CMS, sanitize the blog body before it reaches the Claude prompt (strip instruction-like text) to avoid prompt injection.
 - Add error handling / retries; Bloom and Claude can fail transiently.
-- Cost per demo run is roughly 2 Claude calls + 4 image generations. Once you replace the demo post with your real source, it drops to 1 Claude call + 4 image generations per blog.
+- Cost per demo run is roughly 2 Claude calls, up to 3 web searches, and 4 image generations. Once you replace the demo post with your real source, it drops to 1 Claude call + 4 image generations per blog.
 
 ## Troubleshooting
 
