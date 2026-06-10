@@ -4,7 +4,7 @@ Turn one blog post into on-brand visual content for every channel, in one run.
 
 This n8n workflow takes a blog post, asks Claude to plan platform-specific copy, then calls Bloom to generate an on-brand image for each channel. You get the main blog image plus an adapted caption and a correctly-sized image for Instagram, LinkedIn, and Twitter/X. The text already gets repurposed everywhere; the on-brand image is the part nobody automates.
 
-Out of the box the demo writes its own blog post: it fetches your brand from Bloom and has Claude write a short fictional post that fits it, so the first run produces coherent output for any brand with zero content to prepare. When you wire it into production, delete the demo-post nodes and plug in your real blog source (see [Pass Your Own Data](#pass-your-own-data)).
+Out of the box the demo writes its own blog post from your brand, so the first run is coherent for any brand with zero content to prepare. In production you swap the demo-post nodes for your real blog source (see [Pass Your Own Data](#pass-your-own-data)).
 
 ```text
 brand id -> fetch brand -> Claude writes demo post -> Claude plans copy -> Bloom images -> content-cards.zip
@@ -82,15 +82,7 @@ Double-click the **Brand config** node and paste your brand id into the `brand_s
 
 ## The Demo Post
 
-The demo writes its own input so the first run is coherent with *your* brand instead of shipping someone else's hardcoded blog text. Three nodes stand in for a real blog source:
-
-| Node | What it does |
-| --- | --- |
-| **Bloom: get brand** | Fetches your brand's name and website from Bloom. Also fails fast if the brand id is missing or wrong. |
-| **Write demo post (Claude)** | Writes a short fictional post that fits the brand's audience and voice. Claims stay deliberately generic. |
-| **Adopt demo post** | Reshapes Claude's output into the fields a real source would emit: `title`, `body`, `url`, `author`. |
-
-The post is fictional. It is fine for seeing your brand applied end to end, not something to publish as-is.
+The demo writes its own input: **Bloom: get brand** fetches your brand's name and website (failing fast on a bad brand id), **Write demo post (Claude)** writes a short fictional post that fits the brand, and **Adopt demo post** reshapes it into the `title`, `body`, `url`, `author` fields a real source would emit. The post is deliberately generic and not meant to be published; its only job is to make the first run coherent with *your* brand.
 
 ## What Each Platform Gets
 
@@ -107,16 +99,14 @@ File extensions follow the image format Bloom actually serves (typically PNG), s
 
 ## Run The Demo
 
-Click **Test workflow**. The chain runs:
+Click **Test workflow**. After the demo-post nodes run:
 
-1. **Bloom: get brand** validates your brand id and returns the brand's name and website.
-2. **Write demo post (Claude)** writes a short on-brand demo post as structured [tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use) output.
-3. **Plan content (Claude)** turns the post into a guaranteed-structured plan the same way: no "please reply in JSON", no text parsing.
-4. **Build platform jobs** turns that plan into 4 jobs, one per platform, with the aspect ratio assigned deterministically.
-5. **Bloom: generate → wait → download** runs once per job and produces 4 on-brand images.
-6. **Package ZIP** bundles them into `content-cards.zip`.
+1. **Plan content (Claude)** turns the post into a guaranteed-structured plan using [tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use): no "please reply in JSON", no text parsing.
+2. **Build platform jobs** fans it out into 4 jobs, one per platform, with the aspect ratio assigned deterministically.
+3. **Bloom: generate → wait → download** runs once per job and produces 4 on-brand images.
+4. **Package ZIP** bundles them into `content-cards.zip`.
 
-Open the last node's output and download `content-cards.zip`. Inside are the 4 labelled images. Each item also carries its `caption` and `headline` in the JSON, so you can copy the captions straight from the run.
+Download `content-cards.zip` from the last node's output: 4 labelled images, each carrying its `caption` and `headline` in the JSON so you can copy the captions straight from the run.
 
 ## Pass Your Own Data
 
