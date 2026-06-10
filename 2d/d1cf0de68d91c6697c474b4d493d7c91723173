@@ -1,0 +1,21 @@
+n8n-content-repurposing/README.md
+  s_09bde306c3ee23::t_19dcfc40153337 7
+  s_09bde306c3ee23::t_a82124d3437dbb 85
+  s_09bde306c3ee23::t_6c4fc480994bbf 102,104-107,109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "2dd1cf0de68d91c6697c474b4d493d7c91723173",
+  "prompts": {},
+  "sessions": {
+    "s_09bde306c3ee23": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dfa72017-762d-47a4-84a7-a72bec1c5475",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
