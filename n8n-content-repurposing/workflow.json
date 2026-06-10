@@ -146,13 +146,16 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ JSON.stringify($('Brand config').first().json.brand_session_id || '') }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
+        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ (() => { const b = $('Brand config').first().json.brand_session_id; if (!b || b.startsWith('REPLACE_WITH')) { throw new Error('Set your Bloom brand id in the \"Brand config\" node (brand_session_id field). See the README Setup section.'); } return JSON.stringify(b); })() }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
         "options": {}
       },
       "id": "c0a00000-0000-4000-8000-000000000005",
       "name": "Bloom: generate",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "position": [1080, 300],
       "credentials": {
         "httpHeaderAuth": {
@@ -174,6 +177,9 @@
       "name": "Bloom: wait",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "position": [1300, 300],
       "credentials": {
         "httpHeaderAuth": {
@@ -197,6 +203,9 @@
       "name": "Download image",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "position": [1520, 300]
     },
     {
