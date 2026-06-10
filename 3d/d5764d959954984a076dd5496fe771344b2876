@@ -1,0 +1,22 @@
+n8n-content-repurposing/workflow.json
+  s_09bde306c3ee23::t_ba9ebfa503cf85 204
+  s_09bde306c3ee23::t_ec4789429233c3 215
+n8n-content-repurposing/README.md
+  s_09bde306c3ee23::t_f2d8e0b07891ac 109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "3dd5764d959954984a076dd5496fe771344b2876",
+  "prompts": {},
+  "sessions": {
+    "s_09bde306c3ee23": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dfa72017-762d-47a4-84a7-a72bec1c5475",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
