@@ -108,6 +108,16 @@ Click **Execute workflow**. After the demo-post nodes run:
 
 Download `content-cards.zip` from the last node's output, extract it, and open **`preview.html`** to see the whole campaign as it would look published. The 4 labelled images sit next to it, and the captions and headlines also ride along in the node's JSON output (the `files` array).
 
+## The Factory Page
+
+`factory.html` is a stand-alone demo front end that hides the n8n canvas behind an assembly line: your brand goes in, a package travels the belt through the Bloom and Claude stations, and the finished posts come out the other end.
+
+1. In n8n, **activate the workflow** (toggle in the top bar) so the **Factory webhook** node gets its production URL, and copy that URL from the node.
+2. Open `factory.html` in an editor and paste the URL into the `WEBHOOK_URL` constant at the top of the script.
+3. Open the file in a browser and click **Run the factory**.
+
+The belt choreography is paced to typical stage timings, but the output is the real run: when the workflow finishes, the page renders the four images (from Bloom's hosted URLs) with their captions. Without a `WEBHOOK_URL` the page runs in demo mode with placeholder output, useful for rehearsing the pitch.
+
 ## Pass Your Own Data
 
 The demo-post nodes are a placeholder for where your posts actually come from. Delete **Bloom: get brand**, **Write demo post (Claude)**, and **Adopt demo post**, then connect your real source between **Brand config** and **Plan content (Claude)**:

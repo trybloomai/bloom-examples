@@ -11,6 +11,20 @@
     },
     {
       "parameters": {
+        "httpMethod": "GET",
+        "path": "content-factory",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-000000000011",
+      "name": "Factory webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-460, 480],
+      "webhookId": "c0a00000-0000-4000-8000-00000000beef"
+    },
+    {
+      "parameters": {
         "assignments": {
           "assignments": [
             {
@@ -210,7 +224,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Label each downloaded image with its platform filename, then merge ALL images\n// into ONE item: the Compression node runs once per item, so 4 items would\n// produce 4 zips. One item with 4 binaries produces the single zip we want.\nconst files = [];\nconst binary = {};\n$input.all().forEach((item, i) => {\n  // itemMatching follows n8n's item pairing instead of assuming index alignment,\n  // so labels stay correct even if an upstream node drops or reorders items.\n  const job = $('Build platform jobs').itemMatching(i).json;\n  if (!job || !job.basename) {\n    throw new Error(`Could not pair downloaded image #${i} with its platform job.`);\n  }\n  const bin = item.binary.data;\n  // The file extension follows the format Bloom actually served, not a hardcoded .png.\n  const ext = (bin.fileExtension || (bin.mimeType || '').split('/')[1] || 'png').replace('jpeg', 'jpg');\n  const filename = `${job.basename}.${ext}`;\n  bin.fileName = filename;\n  binary[job.basename] = bin;\n  files.push({\n    platform: job.platform,\n    filename,\n    aspectRatio: job.aspectRatio,\n    headline: job.headline,\n    caption: job.caption,\n  });\n});\nreturn [{ json: { files }, binary }];\n"
+        "jsCode": "// Label each downloaded image with its platform filename, then merge ALL images\n// into ONE item: the Compression node runs once per item, so 4 items would\n// produce 4 zips. One item with 4 binaries produces the single zip we want.\nconst files = [];\nconst binary = {};\n$input.all().forEach((item, i) => {\n  // itemMatching follows n8n's item pairing instead of assuming index alignment,\n  // so labels stay correct even if an upstream node drops or reorders items.\n  const job = $('Build platform jobs').itemMatching(i).json;\n  if (!job || !job.basename) {\n    throw new Error(`Could not pair downloaded image #${i} with its platform job.`);\n  }\n  const bin = item.binary.data;\n  // The file extension follows the format Bloom actually served, not a hardcoded .png.\n  const ext = (bin.fileExtension || (bin.mimeType || '').split('/')[1] || 'png').replace('jpeg', 'jpg');\n  const filename = `${job.basename}.${ext}`;\n  bin.fileName = filename;\n  binary[job.basename] = bin;\n  // Bloom's hosted URL rides along so the factory page can render the images.\n  let imageUrl = '';\n  try { imageUrl = $('Bloom: wait').itemMatching(i).json.data.imageUrl || ''; } catch (e) {}\n  files.push({\n    platform: job.platform,\n    filename,\n    aspectRatio: job.aspectRatio,\n    headline: job.headline,\n    caption: job.caption,\n    imageUrl,\n  });\n});\nreturn [{ json: { files }, binary }];\n"
       },
       "id": "c0a00000-0000-4000-8000-000000000008",
       "name": "Label files",
@@ -241,10 +255,33 @@
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
       "position": [2180, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ JSON.stringify({ post: (() => { try { const p = $('Adopt demo post').first().json; return { title: p.title, author: p.author }; } catch (e) { return {}; } })(), files: $json.files }) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" },
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      },
+      "id": "c0a00000-0000-4000-8000-000000000012",
+      "name": "Respond to factory",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2180, 480],
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
     "When clicking 'Execute workflow'": {
+      "main": [[{ "node": "Brand config", "type": "main", "index": 0 }]]
+    },
+    "Factory webhook": {
       "main": [[{ "node": "Brand config", "type": "main", "index": 0 }]]
     },
     "Brand config": {
@@ -278,7 +315,10 @@
       "main": [[{ "node": "Build preview page", "type": "main", "index": 0 }]]
     },
     "Build preview page": {
-      "main": [[{ "node": "Package ZIP", "type": "main", "index": 0 }]]
+      "main": [[
+        { "node": "Package ZIP", "type": "main", "index": 0 },
+        { "node": "Respond to factory", "type": "main", "index": 0 }
+      ]]
     }
   },
   "settings": {

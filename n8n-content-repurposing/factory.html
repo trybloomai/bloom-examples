@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bloom · content factory</title>
+<style>
+  /* Tokens lifted from trybloomai/hero DESIGN.md (Lucid serif stands in as Georgia). */
+  :root {
+    --primary: #7b2cbf;
+    --primary-dark: #65209f;
+    --primary-highlight: #f3e9fa;
+    --foreground: #1c1c1c;
+    --secondary-foreground: #5c5c5c;
+    --muted-foreground: #8f8f8f;
+    --background: #ffffff;
+    --card: #fafafa;
+    --muted: #f5f5f5;
+    --border: #e7e7e7;
+    --destructive: #d4351c;
+    --font-display: Georgia, "Times New Roman", serif;
+    --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  .page { max-width: 1100px; margin: 0 auto; padding: 72px 24px 120px; }
+
+  .eyebrow { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: rgba(123, 44, 191, .7); }
+  h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.05; letter-spacing: -.02em; margin: 14px 0 10px; }
+  h1 .dim { color: var(--muted-foreground); }
+  .lead { font-size: 1.15rem; line-height: 1.5; color: var(--secondary-foreground); max-width: 560px; margin: 0; }
+
+  .runbar { display: flex; align-items: center; gap: 14px; margin: 30px 0 8px; }
+  button.run { font-family: var(--font-sans); font-size: 15px; font-weight: 500; color: #fff; background: var(--primary); border: 0; border-radius: 10px; padding: 11px 22px; cursor: pointer; }
+  button.run:hover { background: var(--primary-dark); }
+  button.run:disabled { background: var(--muted-foreground); cursor: default; }
+  .status { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-foreground); }
+  .status.live { color: var(--primary); }
+  .status.err { color: var(--destructive); }
+
+  /* ── factory stage ── */
+  .stagewrap { position: relative; margin-top: 36px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); overflow: hidden; }
+  .backdrop { position: absolute; inset: 0; font-family: var(--font-mono); font-size: 11px; line-height: 2.1; letter-spacing: .55em; color: var(--foreground); opacity: .05; white-space: pre; pointer-events: none; user-select: none;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 40%, transparent 30%, black 100%); mask-image: radial-gradient(ellipse at 50% 40%, transparent 30%, black 100%); }
+  .stage { position: relative; width: 1000px; height: 560px; margin: 0 auto; }
+  @media (max-width: 1080px) { .stage { transform: scale(.86); transform-origin: top center; } .stagewrap { max-height: 520px; } }
+
+  .stage svg.belt { position: absolute; inset: 0; }
+  .beltbed { fill: none; stroke: #ececec; stroke-width: 34; stroke-linecap: round; }
+  .beltedge { fill: none; stroke: var(--border); stroke-width: 36; stroke-linecap: round; }
+  .beltline { fill: none; stroke: #d6d6d6; stroke-width: 2; stroke-dasharray: 7 13; animation: belt 1.2s linear infinite paused; }
+  .running .beltline { animation-play-state: running; }
+  @keyframes belt { to { stroke-dashoffset: -20; } }
+  .endcap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; fill: var(--muted-foreground); }
+
+  .pkg { position: absolute; width: 46px; height: 36px; margin: -18px 0 0 -23px; background: #fff; border: 1px solid var(--border); border-radius: 7px; box-shadow: 0 4px 10px rgba(0,0,0,.10); opacity: 0; }
+  .pkg::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; border-radius: 6px 6px 0 0; background: var(--primary); }
+  .pkg::after { content: ""; position: absolute; left: 8px; right: 8px; top: 13px; height: 2px; background: var(--border); box-shadow: 0 6px 0 var(--border), 0 12px 0 var(--border); }
+  .pkg.visible { opacity: 1; }
+
+  .station { position: absolute; width: 168px; margin-left: -84px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 11px; }
+  .station .chip { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--secondary-foreground); border: 1px solid var(--border); border-radius: 9999px; padding: 3px 8px; }
+  .station.bloom .chip { color: var(--primary); border-color: rgba(123,44,191,.35); }
+  .station .name { font-size: 13px; line-height: 1.3; margin-top: 7px; color: var(--foreground); }
+  .station .tick { position: absolute; left: 50%; width: 1px; height: 26px; background: var(--border); }
+  .station.above .tick { top: 100%; }
+  .station.below .tick { bottom: 100%; }
+  .station .dot { position: absolute; left: 50%; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--muted-foreground); }
+  .station.above .dot { top: calc(100% + 23px); }
+  .station.below .dot { bottom: calc(100% + 23px); }
+  .station.active { border-color: var(--primary); animation: ring 1.6s ease-out infinite; }
+  .station.active .dot { background: var(--primary); }
+  .station.done .chip { color: #fff; background: var(--foreground); border-color: var(--foreground); }
+  .station.bloom.done .chip { background: var(--primary); border-color: var(--primary); }
+  @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(123,44,191,.30); } 100% { box-shadow: 0 0 0 14px rgba(123,44,191,0); } }
+
+  /* ── results ── */
+  .results { display: none; margin-top: 64px; }
+  .results.show { display: block; }
+  .results h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.9rem; letter-spacing: -.02em; margin: 12px 0 6px; }
+  .results .byline { color: var(--muted-foreground); font-size: 14px; margin-bottom: 28px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .out { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+  .out img { width: 100%; display: block; background: var(--muted); }
+  .out .meta { padding: 12px 14px 14px; }
+  .out .plat { font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-foreground); }
+  .out .cap { font-size: 13.5px; line-height: 1.45; color: var(--secondary-foreground); margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <p class="eyebrow">content factory</p>
+    <h1>one blog post, <span class="dim">every channel.</span></h1>
+    <p class="lead">Your brand goes in. Claude writes and plans, Bloom renders it on-brand, and four ready-to-publish posts come out the other end.</p>
+    <div class="runbar">
+      <button class="run" id="run">Run the factory</button>
+      <span class="status" id="status">idle</span>
+    </div>
+  </header>
+
+  <div class="stagewrap" id="stagewrap">
+    <pre class="backdrop" id="backdrop" aria-hidden="true"></pre>
+    <div class="stage" id="stage">
+      <svg class="belt" viewBox="0 0 1000 560" width="1000" height="560" aria-hidden="true">
+        <path id="beltpath" class="beltedge" d="M 60 90 H 880 Q 940 90 940 150 V 210 Q 940 270 880 270 H 120 Q 60 270 60 330 V 390 Q 60 450 120 450 H 940" />
+        <path class="beltbed" d="M 60 90 H 880 Q 940 90 940 150 V 210 Q 940 270 880 270 H 120 Q 60 270 60 330 V 390 Q 60 450 120 450 H 940" />
+        <path class="beltline" d="M 60 90 H 880 Q 940 90 940 150 V 210 Q 940 270 880 270 H 120 Q 60 270 60 330 V 390 Q 60 450 120 450 H 940" />
+        <text class="endcap" x="938" y="492" text-anchor="end">OUT</text>
+        <text class="endcap" x="58" y="62">IN</text>
+      </svg>
+      <div class="pkg" id="pkg"></div>
+    </div>
+  </div>
+
+  <section class="results" id="results">
+    <p class="eyebrow">fresh off the line</p>
+    <h2 id="r-title"></h2>
+    <p class="byline" id="r-byline"></p>
+    <div class="grid" id="r-grid"></div>
+  </section>
+</div>
+
+<script>
+// ── config ──────────────────────────────────────────────────────────────────
+// Paste the production URL of the "Factory webhook" node here. Leave empty to
+// run in demo mode (simulated timing, placeholder output).
+const WEBHOOK_URL = '';
+
+// Stations: belt-dot coordinates sit ON the belt path; cards hang above/below.
+const STATIONS = [
+  { id: 's1', who: 'bloom',  side: 'above', x: 220, y: 90,  name: 'reads your brand',          run: 'reading brand name + website' },
+  { id: 's2', who: 'claude', side: 'above', x: 700, y: 90,  name: 'researches & writes the post', run: 'searching the web, writing the post' },
+  { id: 's3', who: 'claude', side: 'below', x: 660, y: 270, name: 'plans 4 platform posts',    run: 'headlines, captions, image plans' },
+  { id: 's4', who: 'bloom',  side: 'below', x: 260, y: 270, name: 'renders 4 on-brand images', run: 'generating with your visual DNA' },
+  { id: 's5', who: 'bloom',  side: 'above', x: 700, y: 450, name: 'packages everything',       run: 'zipping images + preview' },
+];
+// Estimated stage durations (ms) used to pace the choreography. The real run
+// finishes whenever it finishes; the belt waits at the last stations.
+const DURATIONS = [4000, 35000, 25000, 95000, 12000];
+const DEMO_DURATIONS = [1500, 3000, 2500, 4000, 1500];
+
+// ── ascii backdrop (hero motif) ─────────────────────────────────────────────
+(() => {
+  const glyphs = ['·', '·', '·', '+', '·', '─', '·', '·'];
+  let txt = '';
+  for (let r = 0; r < 30; r++) {
+    for (let c = 0; c < 90; c++) txt += glyphs[(r * 7 + c * 13) % glyphs.length] + ' ';
+    txt += '\n';
+  }
+  document.getElementById('backdrop').textContent = txt;
+})();
+
+// ── stage setup ─────────────────────────────────────────────────────────────
+const stage = document.getElementById('stage');
+const path = document.getElementById('beltpath');
+const pkg = document.getElementById('pkg');
+const statusEl = document.getElementById('status');
+const runBtn = document.getElementById('run');
+const total = path.getTotalLength();
+
+function nearestLength(x, y) {
+  let best = 0, bestD = Infinity;
+  for (let l = 0; l <= total; l += 2) {
+    const p = path.getPointAtLength(l);
+    const d = (p.x - x) ** 2 + (p.y - y) ** 2;
+    if (d < bestD) { bestD = d; best = l; }
+  }
+  return best;
+}
+
+const els = {};
+for (const s of STATIONS) {
+  const card = document.createElement('div');
+  card.className = `station ${s.who} ${s.side}`;
+  card.id = s.id;
+  const cardH = 78, gap = 30;
+  card.style.left = s.x + 'px';
+  card.style.top = (s.side === 'above' ? s.y - gap - cardH : s.y + gap) + 'px';
+  card.innerHTML = `<span class='chip'>${s.who}</span><div class='name'>${s.name}</div><span class='tick'></span><span class='dot'></span>`;
+  stage.appendChild(card);
+  els[s.id] = card;
+  s.len = nearestLength(s.x, s.y);
+}
+
+function placePkg(len) {
+  const p = path.getPointAtLength(Math.min(len, total));
+  pkg.style.left = p.x + 'px';
+  pkg.style.top = p.y + 'px';
+}
+placePkg(0);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const ease = (t) => t < .5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
+function travel(from, to, ms) {
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    (function frame(now) {
+      const k = Math.min((now - t0) / ms, 1);
+      placePkg(from + (to - from) * ease(k));
+      if (k < 1) requestAnimationFrame(frame); else resolve();
+    })(t0);
+  });
+}
+
+// ── run ─────────────────────────────────────────────────────────────────────
+let responded = null;
+
+async function run() {
+  runBtn.disabled = true;
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('stagewrap').classList.add('running');
+  pkg.classList.add('visible');
+  statusEl.className = 'status live';
+
+  const demo = !WEBHOOK_URL;
+  const durations = demo ? DEMO_DURATIONS : DURATIONS;
+  responded = null;
+  const job = demo ? demoRun() : fetch(WEBHOOK_URL).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+  job.then((d) => { responded = { ok: true, data: d }; }, (e) => { responded = { ok: false, err: e }; });
+
+  let pos = 0;
+  for (let i = 0; i < STATIONS.length; i++) {
+    const s = STATIONS[i];
+    await travel(pos, s.len, 1500);
+    pos = s.len;
+    els[s.id].classList.add('active');
+    statusEl.textContent = s.who + ' · ' + s.run;
+    const t0 = performance.now();
+    while (performance.now() - t0 < durations[i]) {
+      if (responded) break;
+      await sleep(120);
+    }
+    // The line never outruns the real job: hold at the last working station.
+    while (i === STATIONS.length - 1 && !responded) {
+      statusEl.textContent = 'still rendering … (bloom takes ~60-90s per image)';
+      await sleep(250);
+    }
+    els[s.id].classList.remove('active');
+    els[s.id].classList.add('done');
+    if (responded && !responded.ok) break;
+  }
+
+  if (responded && responded.ok) {
+    await travel(pos, total, 1500);
+    statusEl.textContent = 'done';
+    statusEl.className = 'status';
+    render(responded.data);
+  } else if (responded && !responded.ok) {
+    statusEl.textContent = 'failed: ' + (responded.err && responded.err.message || 'unknown error');
+    statusEl.className = 'status err';
+  } else {
+    // Stages elapsed but the request is still in flight (non-last station path).
+    while (!responded) await sleep(250);
+    if (responded.ok) { await travel(pos, total, 1500); statusEl.textContent = 'done'; statusEl.className = 'status'; render(responded.data); }
+    else { statusEl.textContent = 'failed: ' + responded.err.message; statusEl.className = 'status err'; }
+  }
+  document.getElementById('stagewrap').classList.remove('running');
+  runBtn.disabled = false;
+}
+
+const PLATFORM_LABEL = { main: 'blog · 16:9', instagram: 'instagram · 4:5', linkedin: 'linkedin · 1:1', twitter: 'twitter / x · 16:9' };
+const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function render(data) {
+  const post = data.post || {};
+  document.getElementById('r-title').textContent = post.title || 'your content is ready';
+  document.getElementById('r-byline').textContent = post.author ? 'written and rendered for ' + post.author : '';
+  document.getElementById('r-grid').innerHTML = (data.files || []).map((f) => `
+    <div class='out'>
+      ${f.imageUrl ? `<img src='${esc(f.imageUrl)}' alt='${esc(f.platform)}'>` : ''}
+      <div class='meta'>
+        <div class='plat'>${esc(PLATFORM_LABEL[f.platform] || f.platform)}</div>
+        <div class='cap'>${esc(f.caption || f.headline || '')}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function demoRun() {
+  await sleep(DEMO_DURATIONS.reduce((a, b) => a + b, 0) + 4000);
+  const ph = (w, h, label) => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='100%' height='100%' fill='#f5f5f5'/><text x='50%' y='50%' font-family='monospace' font-size='16' fill='#8f8f8f' text-anchor='middle'>${label}</text></svg>`);
+  return {
+    post: { title: 'demo mode: configure WEBHOOK_URL for a real run', author: 'Your brand' },
+    files: [
+      { platform: 'main', caption: 'Main blog image', imageUrl: ph(800, 450, 'blog 16:9') },
+      { platform: 'instagram', caption: 'Instagram caption lands here, written in your voice.', imageUrl: ph(800, 1000, 'instagram 4:5') },
+      { platform: 'linkedin', caption: 'LinkedIn caption lands here, insight-driven.', imageUrl: ph(800, 800, 'linkedin 1:1') },
+      { platform: 'twitter', caption: 'The tweet lands here, under 280 characters.', imageUrl: ph(800, 450, 'x 16:9') },
+    ],
+  };
+}
+
+runBtn.addEventListener('click', run);
+</script>
+</body>
+</html>
