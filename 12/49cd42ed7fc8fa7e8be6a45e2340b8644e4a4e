@@ -1,0 +1,34 @@
+n8n-content-repurposing/README.md
+  s_9d0b025f573427::t_a27b2fdddf555d 141
+  s_9d0b025f573427::t_4793d9bd938cd0 69,75
+  s_9d0b025f573427::t_63af39e6bcddfe 102,104,106-108,110,112
+  s_9d0b025f573427::t_8a34dc39f9ae31 122-123,131
+  s_9d0b025f573427::t_034003fd8309bb 54,63
+  s_9d0b025f573427::t_83ea878fc68358 137
+  s_9d0b025f573427::t_efef4cd138db4a 5,8-12,15,25-26
+n8n-content-repurposing/factory.html
+  s_9d0b025f573427::t_f14cb71866901f 212-213,215
+  s_9d0b025f573427::t_341d7957a8ba5e 451-454
+n8n-content-repurposing/factory-template.html
+  s_9d0b025f573427::t_3e36a54fd1e25a 212-213,215,451-454
+n8n-content-repurposing/workflow.json
+  s_9d0b025f573427::t_4a730afac4f4bc 49-52,66-69,90-93,104-107,121-124,140-143,163-166,190-193,219-222,232-235,245-248,262-265,280-283,289-297,300-308,311-319,322-330,333-341,344-352,355-363,366-374,377-385,388-396,399-407,410-418
+  s_9d0b025f573427::t_ea935688f42b67 134
+  s_9d0b025f573427::t_123435d3185df2 80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "1249cd42ed7fc8fa7e8be6a45e2340b8644e4a4e",
+  "prompts": {},
+  "sessions": {
+    "s_9d0b025f573427": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ba0b45a0-fafe-4ab1-afbe-745d7aa9aba8",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
