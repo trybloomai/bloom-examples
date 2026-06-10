@@ -104,9 +104,9 @@ Click **Execute workflow**. After the demo-post nodes run:
 1. **Plan content (Claude)** turns the post into a guaranteed-structured plan using [tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use): no "please reply in JSON", no text parsing.
 2. **Build platform jobs** fans it out into 4 jobs, one per platform, with the aspect ratio assigned deterministically.
 3. **Bloom: generate → wait → download** runs once per job and produces 4 on-brand images.
-4. **Package ZIP** bundles them into `content-cards.zip`.
+4. **Build preview page** renders `preview.html`, a mock feed showing the blog post and the Instagram/LinkedIn/X posts with the images and captions in place, and **Package ZIP** bundles everything into `content-cards.zip`.
 
-Download `content-cards.zip` from the last node's output: one zip with the 4 labelled images. The captions and headlines ride along in the node's JSON output (the `files` array), so you can copy them straight from the run.
+Download `content-cards.zip` from the last node's output, extract it, and open **`preview.html`** to see the whole campaign as it would look published. The 4 labelled images sit next to it, and the captions and headlines also ride along in the node's JSON output (the `files` array).
 
 ## Pass Your Own Data
 
@@ -117,6 +117,8 @@ The demo-post nodes are a placeholder for where your posts actually come from. D
 - An **HTTP Request** to your CMS API.
 
 Just keep emitting the same fields (`title`, `body`, `url`, `author`) into **Plan content (Claude)**, and keep the `brand_session_id` field in **Brand config** (the **Bloom: generate** node reads it from there).
+
+One detail: **Build preview page** reads the blog text from **Adopt demo post**. After swapping in your real source, point that lookup at your source node (one line at the top of the node's code); until you do, `preview.html` simply renders without the blog text.
 
 To add or remove a platform, edit the `platforms` array in **Build platform jobs** and the tool schema in **Plan content (Claude)**. Aspect ratio and output file name (extension is derived from the served format) live next to each platform in that array.
 
@@ -161,4 +163,4 @@ Bloom also exposes `resize` and `edit` endpoints if you want to derive more crop
 1. Import `workflow.json`, create the two Header Auth credentials, and select them in the HTTP nodes (Bloom credential in 3 nodes, Anthropic in 2).
 2. Paste your brand id into `brand_session_id` in the **Brand config** node.
 3. Click **Execute workflow** and confirm the full chain runs green.
-4. Check the demo post in **Adopt demo post**'s output actually fits your brand, then download `content-cards.zip` from the **Package ZIP** node and check the 4 on-brand images (main 16:9, Instagram 4:5, LinkedIn 1:1, X 16:9) with a legible headline, plus the 3 captions in the run output.
+4. Check the demo post in **Adopt demo post**'s output actually fits your brand, then download `content-cards.zip` from the **Package ZIP** node, extract it, and open `preview.html`: the blog post plus the Instagram (4:5), LinkedIn (1:1), and X (16:9) mockups should show the 4 on-brand images with legible headlines and their captions in place.
