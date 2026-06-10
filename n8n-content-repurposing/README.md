@@ -99,7 +99,7 @@ File extensions follow the image format Bloom actually serves (typically PNG), s
 
 ## Run The Demo
 
-Click **Test workflow**. After the demo-post nodes run:
+Click **Execute workflow**. After the demo-post nodes run:
 
 1. **Plan content (Claude)** turns the post into a guaranteed-structured plan using [tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use): no "please reply in JSON", no text parsing.
 2. **Build platform jobs** fans it out into 4 jobs, one per platform, with the aspect ratio assigned deterministically.
@@ -160,5 +160,5 @@ Bloom also exposes `resize` and `edit` endpoints if you want to derive more crop
 
 1. Import `workflow.json`, create the two Header Auth credentials, and select them in the HTTP nodes (Bloom credential in 3 nodes, Anthropic in 2).
 2. Paste your brand id into `brand_session_id` in the **Brand config** node.
-3. Click **Test workflow** and confirm the full chain runs green.
+3. Click **Execute workflow** and confirm the full chain runs green.
 4. Check the demo post in **Adopt demo post**'s output actually fits your brand, then download `content-cards.zip` from the **Package ZIP** node and check the 4 on-brand images (main 16:9, Instagram 4:5, LinkedIn 1:1, X 16:9) with a legible headline, plus the 3 captions in the run output.

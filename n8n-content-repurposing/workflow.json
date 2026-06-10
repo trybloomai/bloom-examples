@@ -4,7 +4,7 @@
     {
       "parameters": {},
       "id": "c0a00000-0000-4000-8000-000000000001",
-      "name": "When clicking 'Test workflow'",
+      "name": "When clicking 'Execute workflow'",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [-460, 300]
@@ -219,7 +219,7 @@
     }
   ],
   "connections": {
-    "When clicking 'Test workflow'": {
+    "When clicking 'Execute workflow'": {
       "main": [[{ "node": "Brand config", "type": "main", "index": 0 }]]
     },
     "Brand config": {
