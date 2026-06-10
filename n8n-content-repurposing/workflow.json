@@ -1,0 +1,275 @@
+{
+  "name": "Bloom: Content repurposing (blog → main image + 3 socials)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c0a00000-0000-4000-8000-000000000001",
+      "name": "When clicking 'Execute workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-460, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0000000-0000-4000-8000-000000000014",
+              "name": "brand_session_id",
+              "value": "REPLACE_WITH_YOUR_BRAND_SESSION_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-000000000002",
+      "name": "Brand config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ (() => { const b = $json.brand_session_id; if (!b || b.startsWith('REPLACE_WITH')) { throw new Error('Set your Bloom brand id in the \"Brand config\" node (brand_session_id field). See the README Setup section.'); } return 'https://www.trybloom.ai/api/v1/brands/' + b; })() }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000d",
+      "name": "Bloom: get brand",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-20, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
+          "name": "Bloom API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-fable-5\",\n  \"max_tokens\": 4000,\n  \"tools\": [\n    {\n      \"type\": \"web_search_20260209\",\n      \"name\": \"web_search\",\n      \"max_uses\": 2\n    },\n    {\n      \"name\": \"write_post\",\n      \"description\": \"Submit the final demo blog post for the brand. Always finish by calling this tool.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": { \"type\": \"string\", \"description\": \"Blog post title.\" },\n          \"body\": { \"type\": \"string\", \"description\": \"Blog post body, 150-250 words, plain text, no markdown.\" }\n        },\n        \"required\": [\"title\", \"body\"]\n      }\n    }\n  ],\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify((() => { const d = ($json.data || {}); const brand = d.brand || d; return \"Research the brand \\\"\" + (brand.name || \"this brand\") + \"\\\"\" + (brand.url ? \" (website: \" + brand.url + \")\" : \"\") + \" with web search: check their site and any recent news, launches, or announcements. Then write a short blog post (150-250 words) that could appear on that brand's blog today, about one specific, recent, real topic you found (a product, launch, event, or concrete theme their audience cares about right now). Be explicit: use real product names, features, and dates from your research, and do not state anything you did not verify. Write in the brand's voice, plain text only, no markdown headings or lists. When you are done you MUST call the write_post tool with the final title and body; never answer in plain text.\"; })()) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000e",
+      "name": "Write demo post (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "position": [200, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_ANTHROPIC_CREDENTIAL",
+          "name": "Anthropic API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Shape Claude's demo post like a real blog source would: downstream only needs\n// title, body, url, author. In production, delete the demo-post nodes and have\n// your real source (RSS, webhook, CMS) emit these same fields.\nconst msg = $input.first().json;\nconst toolUse = (msg.content || []).find((block) => block.type === 'tool_use' && block.name === 'write_post');\nif (!toolUse || !toolUse.input) {\n  throw new Error('Claude did not return a write_post tool_use block (stop_reason: ' + (msg.stop_reason || 'unknown') + '). Re-run the workflow.');\n}\nconst d = $('Bloom: get brand').first().json.data || {};\nconst brand = d.brand || d;\nreturn [{\n  json: {\n    title: toolUse.input.title,\n    body: toolUse.input.body,\n    url: brand.url || '',\n    author: brand.name || 'Demo author',\n  },\n}];\n"
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000f",
+      "name": "Adopt demo post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-fable-5\",\n  \"max_tokens\": 4000,\n  \"tools\": [\n    {\n      \"name\": \"plan_content\",\n      \"description\": \"Plan on-brand repurposed content for a blog post across a main blog image and three social platforms.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"main\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short headline for the main blog image.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the main blog image: subject, composition, and medium only.\" }\n            },\n            \"required\": [\"headline\", \"image_prompt\"]\n          },\n          \"instagram\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"Instagram caption adapted to the audience, conversational, with a few relevant hashtags.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the Instagram image: subject, composition, and medium only.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          },\n          \"linkedin\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"LinkedIn caption with a professional, insight-driven tone.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the LinkedIn image: subject, composition, and medium only.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          },\n          \"twitter\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"Concise tweet under 280 characters.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the Twitter/X image: subject, composition, and medium only.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          }\n        },\n        \"required\": [\"main\", \"instagram\", \"linkedin\", \"twitter\"]\n      }\n    }\n  ],\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\"You are a brand marketing assistant. Repurpose the following blog post into on-brand visual content. Produce a main blog image plan plus a caption and image plan for Instagram, LinkedIn, and Twitter/X. Adapt each caption to that platform's audience and tone.\\n\\nImage prompt rules: describe only the subject (what is in the frame), the composition (how it is arranged), and optionally the medium (photograph, illustration, 3D render). Do not use aesthetic adjectives such as sleek, modern, premium, minimalist, or futuristic, and do not describe colors, fonts, or visual style; the brand layer applies all styling on its own, so style words either duplicate it or fight it. Avoid generic person-at-a-laptop or team-in-an-office scenes. Negative constraints (such as no humans, no UI mockups) are allowed and useful.\\n\\nHeadline rules: take a position instead of listing attributes, prefer concrete numbers over vague claims, and write in the register of that platform's audience rather than marketing-speak. Keep every headline short enough to render legibly inside an image.\\n\\nReturn the result by calling the plan_content tool with the complete plan; never answer in plain text.\\n\\nBlog title: \" + $json.title + \"\\nAuthor: \" + ($json.author || \"unknown\") + \"\\nURL: \" + ($json.url || \"\") + \"\\n\\nBlog body:\\n\" + $json.body) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-000000000003",
+      "name": "Plan content (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "position": [640, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_ANTHROPIC_CREDENTIAL",
+          "name": "Anthropic API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read Claude's structured tool_use output (guaranteed JSON, no text parsing)\nconst msg = $input.first().json;\nconst toolUse = (msg.content || []).find((block) => block.type === 'tool_use' && block.name === 'plan_content');\nif (!toolUse || !toolUse.input) {\n  throw new Error('Claude did not return a plan_content tool_use block (stop_reason: ' + (msg.stop_reason || 'unknown') + '). Re-run the workflow.');\n}\nconst plan = toolUse.input;\n\n// Render guidance appended to every image prompt. Brand styling (colors, typography,\n// aesthetic) is deliberately not prompted: Bloom's brand layer applies it via brandSessionId,\n// and restating it in the prompt duplicates or fights that layer.\nconst BRAND_GUIDANCE =\n  'Render the headline inside the image, bold and legible. ' +\n  'One clear focal point. No fine print, no placeholder text, no watermark, no busy layout.';\n\n// Aspect ratio + output filename are assigned deterministically per platform.\nconst platforms = [\n  { platform: 'main',      aspectRatio: '16:9', basename: 'blog-main', plan: plan.main },\n  { platform: 'instagram', aspectRatio: '4:5',  basename: 'instagram', plan: plan.instagram },\n  { platform: 'linkedin',  aspectRatio: '1:1',  basename: 'linkedin',  plan: plan.linkedin },\n  { platform: 'twitter',   aspectRatio: '16:9', basename: 'twitter',   plan: plan.twitter },\n];\n\nreturn platforms.map((p) => {\n  if (!p.plan) {\n    throw new Error(`Claude plan is missing the \"${p.platform}\" section.`);\n  }\n  return {\n    json: {\n      platform: p.platform,\n      aspectRatio: p.aspectRatio,\n      basename: p.basename,\n      headline: p.plan.headline,\n      caption: p.plan.caption || '',\n      image_prompt: `${p.plan.image_prompt}\\n\\nHeadline: \"${p.plan.headline}\".\\n${BRAND_GUIDANCE}`,\n    },\n  };\n});\n"
+      },
+      "id": "c0a00000-0000-4000-8000-000000000004",
+      "name": "Build platform jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.trybloom.ai/api/v1/images/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ (() => { const b = $('Brand config').first().json.brand_session_id; if (!b || b.startsWith('REPLACE_WITH')) { throw new Error('Set your Bloom brand id in the \"Brand config\" node (brand_session_id field). See the README Setup section.'); } return JSON.stringify(b); })() }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-000000000005",
+      "name": "Bloom: generate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "position": [1080, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
+          "name": "Bloom API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ (() => { const imageId = $json.data?.ids?.[0] ?? $json.data?.imageIds?.[0]; if (!imageId) { throw new Error('Bloom generate response is missing an image id.'); } return `https://www.trybloom.ai/api/v1/images/${imageId}?wait=true&timeout=295`; })() }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "c0a00000-0000-4000-8000-000000000006",
+      "name": "Bloom: wait",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "position": [1300, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
+          "name": "Bloom API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.status === 'completed' && $json.data.imageUrl ? $json.data.imageUrl : (() => { throw new Error('Bloom image not ready (status: ' + ($json.data.status || 'unknown') + '). Increase the wait timeout or check the generation.'); })() }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "c0a00000-0000-4000-8000-000000000007",
+      "name": "Download image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "position": [1520, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Label each downloaded image with its platform filename, then merge ALL images\n// into ONE item: the Compression node runs once per item, so 4 items would\n// produce 4 zips. One item with 4 binaries produces the single zip we want.\nconst files = [];\nconst binary = {};\n$input.all().forEach((item, i) => {\n  // itemMatching follows n8n's item pairing instead of assuming index alignment,\n  // so labels stay correct even if an upstream node drops or reorders items.\n  const job = $('Build platform jobs').itemMatching(i).json;\n  if (!job || !job.basename) {\n    throw new Error(`Could not pair downloaded image #${i} with its platform job.`);\n  }\n  const bin = item.binary.data;\n  // The file extension follows the format Bloom actually served, not a hardcoded .png.\n  const ext = (bin.fileExtension || (bin.mimeType || '').split('/')[1] || 'png').replace('jpeg', 'jpg');\n  const filename = `${job.basename}.${ext}`;\n  bin.fileName = filename;\n  binary[job.basename] = bin;\n  files.push({\n    platform: job.platform,\n    filename,\n    aspectRatio: job.aspectRatio,\n    headline: job.headline,\n    caption: job.caption,\n  });\n});\nreturn [{ json: { files }, binary }];\n"
+      },
+      "id": "c0a00000-0000-4000-8000-000000000008",
+      "name": "Label files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 300]
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "binaryPropertyName": "={{ Object.keys($binary).join(',') }}",
+        "outputFormat": "zip",
+        "fileName": "content-cards.zip",
+        "binaryPropertyOutput": "data"
+      },
+      "id": "c0a00000-0000-4000-8000-000000000009",
+      "name": "Package ZIP",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [1960, 300]
+    }
+  ],
+  "connections": {
+    "When clicking 'Execute workflow'": {
+      "main": [[{ "node": "Brand config", "type": "main", "index": 0 }]]
+    },
+    "Brand config": {
+      "main": [[{ "node": "Bloom: get brand", "type": "main", "index": 0 }]]
+    },
+    "Bloom: get brand": {
+      "main": [[{ "node": "Write demo post (Claude)", "type": "main", "index": 0 }]]
+    },
+    "Write demo post (Claude)": {
+      "main": [[{ "node": "Adopt demo post", "type": "main", "index": 0 }]]
+    },
+    "Adopt demo post": {
+      "main": [[{ "node": "Plan content (Claude)", "type": "main", "index": 0 }]]
+    },
+    "Plan content (Claude)": {
+      "main": [[{ "node": "Build platform jobs", "type": "main", "index": 0 }]]
+    },
+    "Build platform jobs": {
+      "main": [[{ "node": "Bloom: generate", "type": "main", "index": 0 }]]
+    },
+    "Bloom: generate": {
+      "main": [[{ "node": "Bloom: wait", "type": "main", "index": 0 }]]
+    },
+    "Bloom: wait": {
+      "main": [[{ "node": "Download image", "type": "main", "index": 0 }]]
+    },
+    "Download image": {
+      "main": [[{ "node": "Label files", "type": "main", "index": 0 }]]
+    },
+    "Label files": {
+      "main": [[{ "node": "Package ZIP", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
