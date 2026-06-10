@@ -14,30 +14,6 @@
         "assignments": {
           "assignments": [
             {
-              "id": "a0000000-0000-4000-8000-000000000010",
-              "name": "title",
-              "value": "How consistent branding compounds over time",
-              "type": "string"
-            },
-            {
-              "id": "a0000000-0000-4000-8000-000000000011",
-              "name": "body",
-              "value": "Most teams treat brand as a one-time project: pick a logo, set a palette, write a voice doc, then move on. But brand is not a deliverable, it is a system that pays off every time someone sees you. The teams that win are the ones whose every email, ad, post, and landing page feels like it came from the same place. That consistency is what turns scattered impressions into recognition, and recognition into trust. The hard part is that consistency does not scale by hand. As soon as you publish across email, Instagram, LinkedIn, and X, every channel wants a different size, a different tone, and a different crop, and the brand quietly drifts. The fix is to make on-brand the default output of your tools, not a manual review step at the end. When the brand layer is something your systems can call, every piece of content ships on-brand without a designer in the loop.",
-              "type": "string"
-            },
-            {
-              "id": "a0000000-0000-4000-8000-000000000012",
-              "name": "url",
-              "value": "https://example.com/blog/consistent-branding-compounds",
-              "type": "string"
-            },
-            {
-              "id": "a0000000-0000-4000-8000-000000000013",
-              "name": "author",
-              "value": "The Bloom Team",
-              "type": "string"
-            },
-            {
               "id": "a0000000-0000-4000-8000-000000000014",
               "name": "brand_session_id",
               "value": "REPLACE_WITH_YOUR_BRAND_SESSION_ID",
@@ -48,10 +24,71 @@
         "options": {}
       },
       "id": "c0a00000-0000-4000-8000-000000000002",
-      "name": "Mock blog post",
+      "name": "Brand config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [-240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ (() => { const b = $json.brand_session_id; if (!b || b.startsWith('REPLACE_WITH')) { throw new Error('Set your Bloom brand id in the \"Brand config\" node (brand_session_id field). See the README Setup section.'); } return 'https://www.trybloom.ai/api/v1/brands/' + b; })() }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000d",
+      "name": "Bloom: get brand",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-20, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
+          "name": "Bloom API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 2000,\n  \"tools\": [\n    {\n      \"name\": \"write_post\",\n      \"description\": \"Write a short demo blog post for a brand.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": { \"type\": \"string\", \"description\": \"Blog post title.\" },\n          \"body\": { \"type\": \"string\", \"description\": \"Blog post body, 150-250 words, plain text, no markdown.\" }\n        },\n        \"required\": [\"title\", \"body\"]\n      }\n    }\n  ],\n  \"tool_choice\": { \"type\": \"tool\", \"name\": \"write_post\" },\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify((() => { const d = ($json.data || {}); const brand = d.brand || d; return \"Write a short demo blog post (150-250 words) that could plausibly appear on the blog of the brand \\\"\" + (brand.name || \"this brand\") + \"\\\"\" + (brand.url ? \" (website: \" + brand.url + \")\" : \"\") + \". Pick one topic this brand's audience would genuinely care about and write in a voice that fits that audience. Keep every claim generic: do not invent specific product facts, features, prices, numbers, customer names, or promises. Plain text only, no markdown headings or lists.\"; })()) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000e",
+      "name": "Write demo post (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [200, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_ANTHROPIC_CREDENTIAL",
+          "name": "Anthropic API key (x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Shape Claude's demo post like a real blog source would: downstream only needs\n// title, body, url, author. In production, delete the demo-post nodes and have\n// your real source (RSS, webhook, CMS) emit these same fields.\nconst msg = $input.first().json;\nconst toolUse = (msg.content || []).find((block) => block.type === 'tool_use');\nif (!toolUse || !toolUse.input) {\n  throw new Error('Claude did not return a write_post tool_use block.');\n}\nconst d = $('Bloom: get brand').first().json.data || {};\nconst brand = d.brand || d;\nreturn [{\n  json: {\n    title: toolUse.input.title,\n    body: toolUse.input.body,\n    url: brand.url || '',\n    author: brand.name || 'Demo author',\n  },\n}];\n"
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000f",
+      "name": "Adopt demo post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
     },
     {
       "parameters": {
@@ -77,7 +114,7 @@
       "name": "Plan content (Claude)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-20, 300],
+      "position": [640, 300],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_YOUR_ANTHROPIC_CREDENTIAL",
@@ -87,13 +124,13 @@
     },
     {
       "parameters": {
-        "jsCode": "// Read Claude's structured tool_use output (guaranteed JSON, no text parsing)\nconst msg = $input.first().json;\nconst toolUse = (msg.content || []).find((block) => block.type === 'tool_use');\nif (!toolUse || !toolUse.input) {\n  throw new Error('Claude did not return a plan_content tool_use block.');\n}\nconst plan = toolUse.input;\n\n// Fail fast, before any Bloom call, if the brand id was never set.\nconst brandSessionId = $('Mock blog post').first().json.brand_session_id;\nif (!brandSessionId || brandSessionId.startsWith('REPLACE_WITH')) {\n  throw new Error('Bloom brand id not set: open the \"Mock blog post\" node and paste your brand id into the brand_session_id field (Setup step 4 in the README).');\n}\n\n// Render guidance appended to every image prompt. Brand styling (colors, typography,\n// aesthetic) is deliberately not prompted: Bloom's brand layer applies it via brandSessionId,\n// and restating it in the prompt duplicates or fights that layer.\nconst BRAND_GUIDANCE =\n  'Render the headline inside the image, bold and legible. ' +\n  'One clear focal point. No fine print, no placeholder text, no watermark, no busy layout.';\n\n// Aspect ratio + output filename are assigned deterministically per platform.\nconst platforms = [\n  { platform: 'main',      aspectRatio: '16:9', basename: 'blog-main', plan: plan.main },\n  { platform: 'instagram', aspectRatio: '4:5',  basename: 'instagram', plan: plan.instagram },\n  { platform: 'linkedin',  aspectRatio: '1:1',  basename: 'linkedin',  plan: plan.linkedin },\n  { platform: 'twitter',   aspectRatio: '16:9', basename: 'twitter',   plan: plan.twitter },\n];\n\nreturn platforms.map((p) => {\n  if (!p.plan) {\n    throw new Error(`Claude plan is missing the \"${p.platform}\" section.`);\n  }\n  return {\n    json: {\n      platform: p.platform,\n      aspectRatio: p.aspectRatio,\n      basename: p.basename,\n      headline: p.plan.headline,\n      caption: p.plan.caption || '',\n      image_prompt: `${p.plan.image_prompt}\\n\\nHeadline: \"${p.plan.headline}\".\\n${BRAND_GUIDANCE}`,\n    },\n  };\n});\n"
+        "jsCode": "// Read Claude's structured tool_use output (guaranteed JSON, no text parsing)\nconst msg = $input.first().json;\nconst toolUse = (msg.content || []).find((block) => block.type === 'tool_use');\nif (!toolUse || !toolUse.input) {\n  throw new Error('Claude did not return a plan_content tool_use block.');\n}\nconst plan = toolUse.input;\n\n// Render guidance appended to every image prompt. Brand styling (colors, typography,\n// aesthetic) is deliberately not prompted: Bloom's brand layer applies it via brandSessionId,\n// and restating it in the prompt duplicates or fights that layer.\nconst BRAND_GUIDANCE =\n  'Render the headline inside the image, bold and legible. ' +\n  'One clear focal point. No fine print, no placeholder text, no watermark, no busy layout.';\n\n// Aspect ratio + output filename are assigned deterministically per platform.\nconst platforms = [\n  { platform: 'main',      aspectRatio: '16:9', basename: 'blog-main', plan: plan.main },\n  { platform: 'instagram', aspectRatio: '4:5',  basename: 'instagram', plan: plan.instagram },\n  { platform: 'linkedin',  aspectRatio: '1:1',  basename: 'linkedin',  plan: plan.linkedin },\n  { platform: 'twitter',   aspectRatio: '16:9', basename: 'twitter',   plan: plan.twitter },\n];\n\nreturn platforms.map((p) => {\n  if (!p.plan) {\n    throw new Error(`Claude plan is missing the \"${p.platform}\" section.`);\n  }\n  return {\n    json: {\n      platform: p.platform,\n      aspectRatio: p.aspectRatio,\n      basename: p.basename,\n      headline: p.plan.headline,\n      caption: p.plan.caption || '',\n      image_prompt: `${p.plan.image_prompt}\\n\\nHeadline: \"${p.plan.headline}\".\\n${BRAND_GUIDANCE}`,\n    },\n  };\n});\n"
       },
       "id": "c0a00000-0000-4000-8000-000000000004",
       "name": "Build platform jobs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [200, 300]
+      "position": [860, 300]
     },
     {
       "parameters": {
@@ -103,14 +140,14 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ JSON.stringify($('Mock blog post').first().json.brand_session_id || '') }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
+        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ JSON.stringify($('Brand config').first().json.brand_session_id || '') }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
         "options": {}
       },
       "id": "c0a00000-0000-4000-8000-000000000005",
       "name": "Bloom: generate",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [420, 300],
+      "position": [1080, 300],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
@@ -131,7 +168,7 @@
       "name": "Bloom: wait",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [640, 300],
+      "position": [1300, 300],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
@@ -154,7 +191,7 @@
       "name": "Download image",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [860, 300]
+      "position": [1520, 300]
     },
     {
       "parameters": {
@@ -164,7 +201,7 @@
       "name": "Label files",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1080, 300]
+      "position": [1740, 300]
     },
     {
       "parameters": {
@@ -178,14 +215,23 @@
       "name": "Package ZIP",
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
-      "position": [1300, 300]
+      "position": [1960, 300]
     }
   ],
   "connections": {
     "When clicking 'Test workflow'": {
-      "main": [[{ "node": "Mock blog post", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Brand config", "type": "main", "index": 0 }]]
     },
-    "Mock blog post": {
+    "Brand config": {
+      "main": [[{ "node": "Bloom: get brand", "type": "main", "index": 0 }]]
+    },
+    "Bloom: get brand": {
+      "main": [[{ "node": "Write demo post (Claude)", "type": "main", "index": 0 }]]
+    },
+    "Write demo post (Claude)": {
+      "main": [[{ "node": "Adopt demo post", "type": "main", "index": 0 }]]
+    },
+    "Adopt demo post": {
       "main": [[{ "node": "Plan content (Claude)", "type": "main", "index": 0 }]]
     },
     "Plan content (Claude)": {
