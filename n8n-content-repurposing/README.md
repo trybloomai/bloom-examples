@@ -16,6 +16,20 @@ brand id -> fetch brand -> Claude writes demo post -> Claude plans copy -> Bloom
 
 Everything runs in n8n. Bloom and Claude are called over plain HTTP, authenticated with native n8n credentials: no files to edit, no restart.
 
+## Point Your Agent At This
+
+Copy this template and let your coding agent wire it into your stack:
+
+```text
+Integrate trybloomai/bloom-examples/n8n-content-repurposing into my n8n instance.
+Delete the demo-post nodes ("Bloom: get brand", "Write demo post (Claude)", "Adopt demo post")
+and plug in my real RSS / webhook / CMS source after "Brand config".
+Keep emitting title, body, url, author into "Plan content (Claude)".
+Keep the tool-use call and the deterministic aspect ratios in "Build platform jobs".
+```
+
+Works with Claude Code, Codex, Cursor, Windsurf, or any coding agent with repo access.
+
 ## Prerequisites
 
 - **A running n8n instance**: [n8n Cloud](https://n8n.io/cloud/) (hosted, nothing to install) or [self-hosted](https://docs.n8n.io/hosting/). Built and tested on n8n 2.23.x.
@@ -114,25 +128,22 @@ Just keep emitting the same fields (`title`, `body`, `url`, `author`) into **Pla
 
 To add or remove a platform, edit the `platforms` array in **Build platform jobs** and the tool schema in **Plan content (Claude)**. Aspect ratio and output file name (extension is derived from the served format) live next to each platform in that array.
 
-## Point Your Agent At This
+## Changing Models
 
-Copy this template and let your coding agent wire it into your stack:
+**Claude.** Two nodes call Claude: **Write demo post (Claude)** and **Plan content (Claude)**. Each carries its own `model` field at the top of its **JSON Body**: double-click the node, edit the field, save. They don't have to match (e.g. a cheap model for the demo post, a strong one for the content plan). The template ships `claude-fable-5` in both. Use these exact ids, with no date suffixes:
 
-```text
-Integrate trybloomai/bloom-examples/n8n-content-repurposing into my n8n instance.
-Delete the demo-post nodes ("Bloom: get brand", "Write demo post (Claude)", "Adopt demo post")
-and plug in my real RSS / webhook / CMS source after "Brand config".
-Keep emitting title, body, url, author into "Plan content (Claude)".
-Keep the tool-use call and the deterministic aspect ratios in "Build platform jobs".
-```
+| Model id | When to pick it |
+| --- | --- |
+| `claude-fable-5` | The most capable Claude model; best copy quality. Template default. |
+| `claude-opus-4-8` | Frontier quality at half the price of Fable 5. |
+| `claude-sonnet-4-6` | Best speed/cost balance for high-volume runs. |
+| `claude-haiku-4-5` | Fastest and cheapest; fine for short, simple posts. |
 
-Works with Claude Code, Codex, Cursor, Windsurf, or any coding agent with repo access.
+**Bloom.** The `model` field in the **Bloom: generate** node's JSON Body takes `fast`, `standard`, or `pro`. Use `standard` while you iterate to cut cost; the template ships `pro`.
 
 ## Optional Settings
 
-- **`model`** in the Bloom nodes: `fast`, `standard`, or `pro`. Use `standard` while you iterate to cut cost; the template ships `pro`.
-- **`imageSize`** in the Bloom nodes: `2K` (default, 1 credit) or `4K` (2 credits). There is no cheaper-than-`2K` option, so to cut cost use a lighter `model` tier instead.
-- **Claude model**: edit the `model` field in the **Write demo post (Claude)** and **Plan content (Claude)** nodes; both default to `claude-sonnet-4-6`.
+- **`imageSize`** in the Bloom nodes: `2K` (default, 1 credit) or `4K` (2 credits). There is no cheaper-than-`2K` option, so to cut cost use a lighter Bloom `model` tier instead.
 
 Bloom also exposes `resize` and `edit` endpoints if you want to derive more crops from one base image or tweak it later, a natural next step that is not part of this base flow.
 
