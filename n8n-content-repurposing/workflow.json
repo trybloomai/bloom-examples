@@ -201,7 +201,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Label each downloaded image with its platform filename so the ZIP is readable,\n// and carry the caption/headline alongside the binary as metadata.\nreturn $input.all().map((item, i) => {\n  // itemMatching follows n8n's item pairing instead of assuming index alignment,\n  // so labels stay correct even if an upstream node drops or reorders items.\n  const job = $('Build platform jobs').itemMatching(i).json;\n  if (!job || !job.basename) {\n    throw new Error(`Could not pair downloaded image #${i} with its platform job.`);\n  }\n  const binary = item.binary.data;\n  // The file extension follows the format Bloom actually served, not a hardcoded .png.\n  const ext = (binary.fileExtension || (binary.mimeType || '').split('/')[1] || 'png').replace('jpeg', 'jpg');\n  const filename = `${job.basename}.${ext}`;\n  binary.fileName = filename;\n  return {\n    json: {\n      platform: job.platform,\n      filename,\n      aspectRatio: job.aspectRatio,\n      headline: job.headline,\n      caption: job.caption,\n    },\n    binary: { data: binary },\n  };\n});\n"
+        "jsCode": "// Label each downloaded image with its platform filename, then merge ALL images\n// into ONE item: the Compression node runs once per item, so 4 items would\n// produce 4 zips. One item with 4 binaries produces the single zip we want.\nconst files = [];\nconst binary = {};\n$input.all().forEach((item, i) => {\n  // itemMatching follows n8n's item pairing instead of assuming index alignment,\n  // so labels stay correct even if an upstream node drops or reorders items.\n  const job = $('Build platform jobs').itemMatching(i).json;\n  if (!job || !job.basename) {\n    throw new Error(`Could not pair downloaded image #${i} with its platform job.`);\n  }\n  const bin = item.binary.data;\n  // The file extension follows the format Bloom actually served, not a hardcoded .png.\n  const ext = (bin.fileExtension || (bin.mimeType || '').split('/')[1] || 'png').replace('jpeg', 'jpg');\n  const filename = `${job.basename}.${ext}`;\n  bin.fileName = filename;\n  binary[job.basename] = bin;\n  files.push({\n    platform: job.platform,\n    filename,\n    aspectRatio: job.aspectRatio,\n    headline: job.headline,\n    caption: job.caption,\n  });\n});\nreturn [{ json: { files }, binary }];\n"
       },
       "id": "c0a00000-0000-4000-8000-000000000008",
       "name": "Label files",
@@ -212,7 +212,7 @@
     {
       "parameters": {
         "operation": "compress",
-        "binaryPropertyName": "data",
+        "binaryPropertyName": "={{ Object.keys($binary).join(',') }}",
         "outputFormat": "zip",
         "fileName": "content-cards.zip",
         "binaryPropertyOutput": "data"

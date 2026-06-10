@@ -106,7 +106,7 @@ Click **Execute workflow**. After the demo-post nodes run:
 3. **Bloom: generate → wait → download** runs once per job and produces 4 on-brand images.
 4. **Package ZIP** bundles them into `content-cards.zip`.
 
-Download `content-cards.zip` from the last node's output: 4 labelled images, each carrying its `caption` and `headline` in the JSON so you can copy the captions straight from the run.
+Download `content-cards.zip` from the last node's output: one zip with the 4 labelled images. The captions and headlines ride along in the node's JSON output (the `files` array), so you can copy them straight from the run.
 
 ## Pass Your Own Data
 
