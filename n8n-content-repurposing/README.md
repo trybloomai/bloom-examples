@@ -52,25 +52,27 @@ https://raw.githubusercontent.com/trybloomai/bloom-examples/main/n8n-content-rep
 
 **2. Add the Bloom credential**
 
-Double-click the **Bloom: get brand** node. Below the **Authentication** dropdowns there is a **Header Auth** field. Open its dropdown and click **+ Create new credential**. n8n opens a **Header Auth** credential form. Fill it in exactly:
+Double-click the **Bloom: get brand** node. Below the **Authentication** dropdowns there is a **Header Auth** field. Open its dropdown and click **+ Create new credential**. n8n opens a **Header Auth** credential form.
+
+Before anything else, rename the credential: click its name in the **top-left corner** of the dialog (it defaults to "Header Auth account") and type `Bloom API key`. You are about to create two look-alike Header Auth credentials, and this name is the only way to tell them apart later. Then fill in the fields exactly:
 
 | Field | Value |
 | --- | --- |
 | **Name** | `x-api-key` |
 | **Value** | your Bloom API key |
 
-Save it. Now do the same in **Bloom: generate** and **Bloom: wait**: open each node's **Header Auth** field and just **select the credential you created** (don't make a new one).
+Save it. Now do the same in **Bloom: generate** and **Bloom: wait**: open each node's **Header Auth** field and just **select "Bloom API key"** (don't make a new one).
 
 **3. Add the Anthropic credential**
 
-Double-click the **Write demo post (Claude)** node, open the dropdown of its **Header Auth** field (below the **Authentication** dropdowns), and **+ Create new credential** the same way:
+Double-click the **Write demo post (Claude)** node, open the dropdown of its **Header Auth** field (below the **Authentication** dropdowns), and **+ Create new credential** the same way. Again, rename it first in the **top-left corner** of the dialog, this time to `Anthropic API key`, then fill in:
 
 | Field | Value |
 | --- | --- |
 | **Name** | `x-api-key` |
 | **Value** | your Anthropic API key |
 
-Then select that same credential in the **Plan content (Claude)** node.
+Then select "Anthropic API key" in the **Plan content (Claude)** node.
 
 **4. Set your brand id**
 
@@ -161,7 +163,7 @@ Bloom also exposes `resize` and `edit` endpoints if you want to derive more crop
 - `INSUFFICIENT_CREDITS`: add credits in Bloom.
 - `TOO_MANY_REQUESTS`: wait and try again.
 - Claude `401` / `authentication_error`: check the Anthropic credential.
-- Node shows "credentials not set" (highlighted after import): open it and select the Header Auth credential you created.
+- Node shows "credentials not set" (highlighted after import): open it and select the right credential: "Bloom API key" for the Bloom nodes, "Anthropic API key" for the Claude nodes.
 - `Invalid brand session ID` / `Input validation failed` on **Bloom: generate**: the `brand_session_id` value is not a valid brand id. Fix it in the **Brand config** node.
 
 ## Verification
