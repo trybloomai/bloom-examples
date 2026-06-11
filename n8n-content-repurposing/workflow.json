@@ -127,33 +127,6 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://www.trybloom.ai/api/v1/images/search",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"brandSessionId\": {{ JSON.stringify($('Normalize input (post + brand id)').first().json.brand_session_id) }},\n  \"query\": {{ JSON.stringify(String($('Normalize input (post + brand id)').first().json.title || '').slice(0, 500)) }},\n  \"limit\": 8\n}",
-        "options": {}
-      },
-      "id": "c0a00000-0000-4000-8000-000000000005",
-      "name": "Bloom: search reference images",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "onError": "continueRegularOutput",
-      "position": [
-        640,
-        300
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
-          "name": "Bloom API key (x-api-key)"
-        }
-      }
-    },
-    {
-      "parameters": {
         "jsCode": "// No LLM in the loop: each platform's image brief is a fixed template that\n// describes that platform's audience and composition, with the user's own\n// copy (title + caption) injected as subject matter. The in-image headline\n// is the blog title, so even the words inside the image are the user's.\nconst post = $('Normalize input (post + brand id)').first().json;\n\n// Render guidance appended to every image prompt. Brand styling (colors, typography,\n// aesthetic) is deliberately not prompted: Bloom's brand layer applies it via brandSessionId,\n// and restating it in the prompt duplicates or fights that layer.\nconst BRAND_GUIDANCE =\n  'Render the headline inside the image, bold and legible. ' +\n  'One clear focal point.';\n\nconst SCENES = {\n  main: 'A wide editorial hero image for the blog post itself. Depict the single most concrete subject of the post (an object, place, or process named in it), composed with clear space for the headline. Photograph or illustration.',\n  instagram: 'A single-subject close-up for an Instagram feed: one object or moment from the post, framed tight and vertical, instantly readable at thumbnail size between personal photos.',\n  linkedin: 'A square composition for a LinkedIn audience reading in a professional context: the subject of the post shown in its work or process setting, like a still from a well-shot documentary about the craft.',\n  twitter: 'A bold, high-contrast composition for a fast-scrolling X timeline: one focal subject from the post, large in the frame, readable in half a second at small size.',\n};\n\n// Aspect ratio + output filename are assigned deterministically per platform.\n// Captions are the user's own copy from the form, passed through untouched.\nconst platforms = [\n  { platform: 'main',      aspectRatio: '16:9', basename: 'blog-main', caption: '' },\n  { platform: 'instagram', aspectRatio: '4:5',  basename: 'instagram', caption: post.captions.instagram },\n  { platform: 'linkedin',  aspectRatio: '1:1',  basename: 'linkedin',  caption: post.captions.linkedin },\n  { platform: 'twitter',   aspectRatio: '16:9', basename: 'twitter',   caption: post.captions.twitter },\n];\n\n// The blog hero has no caption, so it leans on the opening of the post instead.\nconst excerpt = String(post.body || '').replace(/\\s+/g, ' ').slice(0, 400);\n\nreturn platforms.map((p) => {\n  const copy = p.caption || excerpt;\n  return {\n    json: {\n      platform: p.platform,\n      aspectRatio: p.aspectRatio,\n      basename: p.basename,\n      headline: post.title,\n      caption: p.caption,\n      image_prompt:\n        SCENES[p.platform] +\n        '\\n\\nThe post this image accompanies (subject matter only, do not render this text):\\n\"' + copy + '\"\\n\\n' +\n        'Headline: \"' + post.title + '\".\\n' + BRAND_GUIDANCE,\n    },\n  };\n});\n"
       },
       "id": "c0a00000-0000-4000-8000-000000000007",
@@ -161,7 +134,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        860,
+        640,
         300
       ]
     },
@@ -173,7 +146,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ JSON.stringify($('Normalize input (post + brand id)').first().json.brand_session_id) }},\n  \"referenceImageIds\": {{ JSON.stringify((() => { try { const imgs = (($('Bloom: search reference images').first().json.data || {}).candidates || []); return imgs.slice(0, 4).map((i) => i.id); } catch (e) { return []; } })()) }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
+        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ JSON.stringify($('Normalize input (post + brand id)').first().json.brand_session_id) }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
         "options": {}
       },
       "id": "c0a00000-0000-4000-8000-000000000008",
@@ -184,7 +157,7 @@
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "position": [
-        1080,
+        860,
         300
       ],
       "credentials": {
@@ -211,7 +184,7 @@
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "position": [
-        1300,
+        1080,
         300
       ],
       "credentials": {
@@ -240,7 +213,7 @@
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "position": [
-        1520,
+        1300,
         300
       ]
     },
@@ -253,7 +226,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1740,
+        1520,
         300
       ]
     },
@@ -266,7 +239,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1960,
+        1740,
         300
       ]
     },
@@ -283,7 +256,7 @@
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
       "position": [
-        2180,
+        1960,
         300
       ]
     },
@@ -301,7 +274,7 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 2.3,
       "position": [
-        2400,
+        2180,
         300
       ],
       "webhookId": "c0a00000-0000-4000-8000-00000000f0f2"
@@ -342,17 +315,6 @@
       ]
     },
     "Normalize input (post + brand id)": {
-      "main": [
-        [
-          {
-            "node": "Bloom: search reference images",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Bloom: search reference images": {
       "main": [
         [
           {
