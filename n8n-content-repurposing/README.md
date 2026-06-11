@@ -1,20 +1,18 @@
 # Bloom + n8n Content Repurposing
 
-Turn one blog post into on-brand visual content for every channel, in one run.
+Turn one finished blog post into an on-brand image for every channel, in one run.
 
-This n8n workflow takes a blog post, asks Claude to plan platform-specific copy, then calls Bloom to generate an on-brand image for each channel. You get the main blog image plus an adapted caption and a correctly-sized image for Instagram, LinkedIn, and Twitter/X. The text already gets repurposed everywhere; the on-brand image is the part nobody automates.
-
-Out of the box the demo researches your brand on the web and writes its own blog post about something real and recent, so the first run is coherent for any brand with zero content to prepare. In production you swap the demo-post nodes for your real blog source (see [Pass Your Own Data](#pass-your-own-data)).
+You already have the blog post, and you already wrote the captions: the copy is not the problem. The on-brand image for each platform is. This n8n workflow takes your blog post and captions through a form, lets you pick one of your Bloom brands from a dropdown, and calls Bloom to generate each platform's image at the right size with your blog title drawn on-brand inside it. No LLM in the loop: the image brief for each platform is a fixed template (audience and composition per channel) with your own copy injected. The run ends with all the outputs rendered in your browser, plus a `content-cards.zip` with the files.
 
 ```text
-brand id -> fetch brand -> Claude writes demo post -> Claude plans copy -> Bloom images -> content-cards.zip
-            \________________________________________/                     ├─ main image  16:9
-             replace this part with your real source                       ├─ Instagram   4:5
-                                                                            ├─ LinkedIn    1:1
-                                                                            └─ Twitter/X   16:9
+form: blog post + captions -> pick your brand -> per-platform prompts -> Bloom generates -> results in your browser
+                              (from the API,     (fixed templates +     ├─ main image  16:9      + content-cards.zip
+                               no ids to copy)    your copy, no LLM)    ├─ Instagram   4:5
+                                                                        ├─ LinkedIn    1:1
+                                                                        └─ Twitter/X   16:9
 ```
 
-Everything runs in n8n. Bloom and Claude are called over plain HTTP, authenticated with native n8n credentials: no files to edit, no restart.
+Everything happens inside n8n: the input is an n8n form, the brand is picked from a dropdown populated by the Bloom API, and the result is shown by the form's final page. There is no separate web UI to visit and no ids to copy around. Bloom is called over plain HTTP, authenticated with one native n8n credential.
 
 ## Point Your Agent At This
 
@@ -22,10 +20,10 @@ Copy this template and let your coding agent wire it into your stack:
 
 ```text
 Integrate trybloomai/bloom-examples/n8n-content-repurposing into my n8n instance.
-Delete the demo-post nodes ("Bloom: get brand", "Write demo post (Claude)", "Adopt demo post")
-and plug in my real RSS / webhook / CMS source after "Brand config".
-Keep emitting title, body, url, author into "Plan content (Claude)".
-Keep the tool-use call and the deterministic aspect ratios in "Build platform jobs".
+Replace the form trigger ("Form: paste your post + captions") with my real source
+(RSS / webhook / CMS) that emits title, body and per-platform captions, and pin my
+brand id instead of the "Form: pick your brand" page. Keep the per-platform scene
+templates and the deterministic aspect ratios in "Construct image prompts".
 ```
 
 Works with Claude Code, Codex, Cursor, Windsurf, or any coding agent with repo access.
@@ -33,8 +31,7 @@ Works with Claude Code, Codex, Cursor, Windsurf, or any coding agent with repo a
 ## Prerequisites
 
 - **A running n8n instance**: [n8n Cloud](https://n8n.io/cloud/) (hosted, nothing to install) or [self-hosted](https://docs.n8n.io/hosting/). Built and tested on n8n 2.23.x.
-- **A Bloom API key and a brand id**: get the key from [Bloom settings](https://www.trybloom.ai/settings). For the brand id, open your brand in [Bloom](https://www.trybloom.ai/brands) and copy the `<id>` from the URL `https://www.trybloom.ai/brand/<id>`. (For automation you can also [list brands via the API](https://www.trybloom.ai/docs/api#get-a-brand-id) and copy any returned `id`.)
-- **An Anthropic API key**: from the [Anthropic Console](https://console.anthropic.com/settings/keys).
+- **A Bloom API key**: from [Bloom settings](https://www.trybloom.ai/settings). You also need at least one brand on your account ([create one](https://www.trybloom.ai/brands) from a website URL); the workflow lists your brands and lets you pick one, so you never have to copy a brand id.
 
 ## Setup
 
@@ -52,88 +49,94 @@ https://raw.githubusercontent.com/trybloomai/bloom-examples/main/n8n-content-rep
 
 **2. Add the Bloom credential**
 
-Double-click the **Bloom: get brand** node. Below the **Authentication** dropdowns there is a **Header Auth** field. Open its dropdown and click **+ Create new credential**. n8n opens a **Header Auth** credential form.
+Double-click the **Bloom: fetch your brands** node. Below the **Authentication** dropdowns there is a **Header Auth** field. Open its dropdown and click **+ Create new credential**. n8n opens a **Header Auth** credential form.
 
-Before anything else, rename the credential: click its name in the **top-left corner** of the dialog (it defaults to "Header Auth account") and type `Bloom API key`. You are about to create two look-alike Header Auth credentials, and this name is the only way to tell them apart later. Then fill in the fields exactly:
+Rename the credential first: click its name in the **top-left corner** of the dialog (it defaults to "Header Auth account") and type `Bloom API key`, so it's recognizable later. Then fill in the fields exactly:
 
 | Field | Value |
 | --- | --- |
 | **Name** | `x-api-key` |
 | **Value** | your Bloom API key |
 
-Save it. Now do the same in **Bloom: generate** and **Bloom: wait**: open each node's **Header Auth** field and just **select "Bloom API key"** (don't make a new one).
+Save it. Now do the same in **Bloom: search reference images**, **Bloom: generate images**, and **Bloom: wait until ready**: open each node's **Header Auth** field and just **select "Bloom API key"** (don't make a new one).
 
-**3. Add the Anthropic credential**
+> Tip: the nodes that still need a credential show a small **red triangle** ⚠️ on the canvas. When all four are gone, you're set. There is nothing else to configure: no other API keys, no brand id to paste, no placeholder fields.
 
-Double-click the **Write demo post (Claude)** node, open the dropdown of its **Header Auth** field (below the **Authentication** dropdowns), and **+ Create new credential** the same way. Again, rename it first in the **top-left corner** of the dialog, this time to `Anthropic API key`, then fill in:
+## How a Run Works
 
-| Field | Value |
-| --- | --- |
-| **Name** | `x-api-key` |
-| **Value** | your Anthropic API key |
-
-Then select "Anthropic API key" in the **Plan content (Claude)** node.
-
-**4. Set your brand id**
-
-Double-click the **Brand config** node and paste your brand id into the `brand_session_id` field.
-
-> Tip: the nodes that still need a credential show a small **red triangle** ⚠️ on the canvas. When all five are gone, you're set.
-
-## The Demo Post
-
-The demo writes its own input: **Bloom: get brand** fetches your brand's name and website, **Write demo post (Claude)** researches the brand with web search and writes a short post about one specific, recent, real topic it found (a launch, a product, an announcement), and **Adopt demo post** reshapes it into the `title`, `body`, `url`, `author` fields a real source would emit. Every claim is grounded in what the search found, but it is still generated content: skim it before treating it as publishable.
+1. **Form: paste your post + captions**: click **Execute workflow** and n8n opens the form. Paste your blog title, blog body, and the captions you already wrote for Instagram, LinkedIn, and Twitter/X. The workflow never rewrites them.
+2. **Form: pick your brand**: the workflow calls the Bloom API for your brand list and shows a second form page with a dropdown. Pick the brand; its id is extracted from the selection, so nothing is copied by hand.
+3. **Construct image prompts (1 per platform)** assembles four image briefs deterministically: a fixed scene template per platform (what reads well for that audience, at that size) plus your caption as subject matter and your blog title as the in-image headline. No LLM call, nothing generated: every word that ends up in or next to an image is yours.
+4. **Bloom: generate images → wait until ready → download** runs once per platform and produces 4 on-brand images. Up to 4 reference images ride along, picked by semantic search over your brand's library using the blog title as the query.
+5. **Your results, in the browser**: the final form page renders every output: the blog post with its new hero image, and the Instagram/LinkedIn/X posts with your captions and the generated images in place. **Zip the outputs (content-cards.zip)** also bundles `preview.html` (the same page, self-contained) plus the 4 labelled images into `content-cards.zip`, downloadable from that node's output in the canvas.
 
 ## What Each Platform Gets
 
-Claude writes a headline, a caption, and an image plan per platform. Bloom renders the image at the right aspect ratio, with the headline drawn on-brand inside it.
+Each platform has its own brief template tuned to its audience; your captions are passed through untouched, and the blog title is the headline Bloom draws inside every image. Bloom renders at the right aspect ratio per channel.
 
-| Platform | Aspect ratio | Caption tone | File in zip |
+| Platform | Aspect ratio | Caption | File in zip |
 | --- | --- | --- | --- |
-| Main blog image | `16:9` | (no caption) | `blog-main.png` |
-| Instagram | `4:5` | Conversational, a few hashtags | `instagram.png` |
-| LinkedIn | `1:1` | Professional, insight-driven | `linkedin.png` |
-| Twitter/X | `16:9` | Concise, under 280 chars | `twitter.png` |
+| Main blog image | `16:9` | (none: the blog body is the copy) | `blog-main.png` |
+| Instagram | `4:5` | yours, from the form | `instagram.png` |
+| LinkedIn | `1:1` | yours, from the form | `linkedin.png` |
+| Twitter/X | `16:9` | yours, from the form | `twitter.png` |
 
 File extensions follow the image format Bloom actually serves (typically PNG), so the names may end in `.jpg` or `.webp` instead.
 
-## Run The Demo
+## Seeing Results Inside n8n
 
-Click **Execute workflow**. After the demo-post nodes run:
-
-1. **Plan content (Claude)** turns the post into a guaranteed-structured plan using [tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use): no "please reply in JSON", no text parsing.
-2. **Build platform jobs** fans it out into 4 jobs, one per platform, with the aspect ratio assigned deterministically.
-3. **Bloom: generate → wait → download** runs once per job and produces 4 on-brand images.
-4. **Build preview page** renders `preview.html`, a mock feed showing the blog post and the Instagram/LinkedIn/X posts with the images and captions in place, and **Package ZIP** bundles everything into `content-cards.zip`.
-
-Download `content-cards.zip` from the last node's output, extract it, and open **`preview.html`** to see the whole campaign as it would look published. The 4 labelled images sit next to it, and the captions and headlines also ride along in the node's JSON output (the `files` array).
+- All the outputs (images + your copy in platform mockups) are rendered by the **Form: show results in browser** form page at the end of every run: that is the browser tab the form opened in.
+- On the canvas, each image is also visible directly: open **Download finished images** (or **Collect + name the 4 files**) and switch the output panel to **Binary**: n8n previews the images inline.
+- The structured data (headlines, captions, hosted image URLs) is in the `files` array of **Collect + name the 4 files**' JSON output.
 
 ## Pass Your Own Data
 
-The demo-post nodes are a placeholder for where your posts actually come from. Delete **Bloom: get brand**, **Write demo post (Claude)**, and **Adopt demo post**, then connect your real source between **Brand config** and **Plan content (Claude)**:
+The two form pages are a placeholder for wherever your posts actually come from. The node index, with what to touch when you automate:
 
-- **RSS Feed Trigger** to repurpose every new post automatically.
-- **Webhook** to trigger from your CMS on publish.
-- An **HTTP Request** to your CMS API.
+```text
+ 1  Form: paste your post + captions        ┐ REPLACE with your source:
+ 2  Bloom: fetch your brands                │ RSS / webhook / CMS trigger
+ 3  Build brand dropdown                    │ + a pinned brand id
+ 4  Form: pick your brand                   ┘
+ 5  Normalize input (post + brand id)       ← ADAPT: the contract (see below)
+ 6  Bloom: search reference images          ┐
+ 7  Construct image prompts (1 per platform)│
+ 8  Bloom: generate images                  │
+ 9  Bloom: wait until ready                 │ KEEP as is
+10  Download finished images                │
+11  Collect + name the 4 files              │
+12  Render results preview (HTML)           │
+13  Zip the outputs (content-cards.zip)     ┘
+14  Form: show results in browser           ← DELETE when automating (needs the
+                                              form trigger); ship the zip instead
+```
 
-Just keep emitting the same fields (`title`, `body`, `url`, `author`) into **Plan content (Claude)**, and keep the `brand_session_id` field in **Brand config** (the **Bloom: generate** node reads it from there).
+Everything from node 6 down only reads the object emitted by node 5, never the forms. So automating is: swap nodes 1–4 for your trigger, then rewrite node 5's few lines to map your source's fields into the same shape it emits today:
 
-One detail: **Build preview page** reads the blog text from **Adopt demo post**. After swapping in your real source, point that lookup at your source node (one line at the top of the node's code); until you do, `preview.html` simply renders without the blog text.
+```js
+{ brand_session_id, brand_name, title, body,
+  captions: { instagram, linkedin, twitter } }
+```
 
-To add or remove a platform, edit the `platforms` array in **Build platform jobs** and the tool schema in **Plan content (Claude)**. Aspect ratio and output file name (extension is derived from the served format) live next to each platform in that array.
+Emit that, and nodes 6–13 run unchanged. Notes:
+
+- Your source must bring the captions (RSS doesn't have them; CMS custom fields do). Empty captions still generate images, the posts just ship without copy.
+- If your CMS body is HTML (WordPress's `content.rendered`), strip the tags in node 5: the prompts and the preview expect plain text.
+- Replace **Form: show results in browser** with wherever the zip goes next: Slack, Drive, your CMS.
+
+Keep **Bloom: search reference images**: it semantic-searches your brand's library (uploaded + scraped images) with the blog title as the query and passes the closest matches as generation references, which measurably improves the output. No relevant match, or the node deleted entirely: generation still works, just without references.
+
+To add or remove a platform, edit the `platforms` array and the `SCENES` templates in **Construct image prompts (1 per platform)**, and the form fields in **Form: paste your post + captions**. Aspect ratio, output file name, and the scene brief live next to each platform in that node.
+
+## Tuning The Images
+
+- **The scene templates** in **Construct image prompts (1 per platform)** (`SCENES`) are where the per-platform art direction lives: what kind of composition reads on each channel. Edit them in plain English. One rule worth keeping: don't add style words (colors, fonts, "minimalist", "premium"): Bloom's brand layer applies your brand's styling on its own, and style words in the prompt duplicate or fight it.
+- **The in-image headline** is your blog title. If you want a different line inside a given image, change the `headline` assignment in **Construct image prompts (1 per platform)**.
+- **Want smarter briefs?** If you'd rather have an LLM tailor each scene to the specific post, insert one Claude tool-use call between **Bloom: search reference images** and **Construct image prompts (1 per platform)**: the git history of this template has a working version of exactly that node.
 
 ## Changing Models
 
-**Claude.** Two nodes call Claude: **Write demo post (Claude)** and **Plan content (Claude)**. Each carries its own `model` field at the top of its **JSON Body**: double-click the node, edit the field, save. They don't have to match (e.g. a cheap model for the demo post, a strong one for the content plan). The template ships `claude-fable-5` in both. Use these exact ids, with no date suffixes:
-
-| Model id | When to pick it |
-| --- | --- |
-| `claude-fable-5` | The most capable Claude model; best copy quality. Template default. |
-| `claude-opus-4-8` | Frontier quality at half the price of Fable 5. |
-| `claude-sonnet-4-6` | Best speed/cost balance for high-volume runs. |
-| `claude-haiku-4-5` | Fastest and cheapest; fine for short, simple posts. |
-
-**Bloom.** The `model` field in the **Bloom: generate** node's JSON Body takes `fast`, `standard`, or `pro`. Use `standard` while you iterate to cut cost; the template ships `pro`.
+The `model` field in the **Bloom: generate images** node's JSON Body takes `fast`, `standard`, or `pro`. Use `standard` while you iterate to cut cost; the template ships `pro`.
 
 ## Optional Settings
 
@@ -143,24 +146,27 @@ Bloom also exposes `resize` and `edit` endpoints if you want to derive more crop
 
 ## Before Shipping
 
-- When the trigger is RSS/CMS, sanitize the blog body before it reaches the Claude prompt (strip instruction-like text) to avoid prompt injection.
-- Add error handling / retries; Bloom and Claude can fail transiently.
-- Cost per demo run is roughly 2 Claude calls, up to 3 web searches, and 4 image generations. Once you replace the demo post with your real source, it drops to 1 Claude call + 4 image generations per blog.
+- Add error handling / retries; Bloom can fail transiently (the HTTP nodes already retry a few times).
+- Cost per run is 4 image generations. No LLM cost.
 
 ## Troubleshooting
 
-- `Set your Bloom brand id` on **Bloom: get brand**: the placeholder in **Brand config** was never replaced. Paste your brand id into `brand_session_id`.
-- `BRAND_NOT_FOUND`: check the `brand_session_id` field in **Brand config** and that your key can access that brand.
+- `No ready brands on this Bloom account` on **Build brand dropdown**: your key has no completed brands. Create one at [trybloom.ai/brands](https://www.trybloom.ai/brands) and wait for onboarding to finish.
 - `UNAUTHORIZED`: check the Bloom credential.
 - `INSUFFICIENT_CREDITS`: add credits in Bloom.
 - `TOO_MANY_REQUESTS`: wait and try again.
-- Claude `401` / `authentication_error`: check the Anthropic credential.
-- Node shows "credentials not set" (highlighted after import): open it and select the right credential: "Bloom API key" for the Bloom nodes, "Anthropic API key" for the Claude nodes.
-- `Invalid brand session ID` / `Input validation failed` on **Bloom: generate**: the `brand_session_id` value is not a valid brand id. Fix it in the **Brand config** node.
+- Node shows "credentials not set" (highlighted after import): open it and select the "Bloom API key" credential.
+- The **Continue** button spins forever on the first page: two known causes. (a) The brand-list call to Bloom is what runs between the two pages; the node now times out after 15s and retries 3 times, so a real outage surfaces as a failed execution instead of an endless spinner: check **Executions** in n8n to see the error. (b) In test mode the form URL is single-use per **Execute workflow** click: submitting a stale tab from an earlier run spins forever. Click **Execute workflow** again and use the fresh tab.
+- `Form Trigger node must be set before this node`: the form pages only work in a workflow that starts with the **Form: paste your post + captions** trigger; don't swap it for a manual trigger while keeping the form pages.
+- The form tab shows a spinner for a while after picking the brand: that's the run itself (4 image generations take a couple of minutes). The page updates when the outputs are ready.
+
+## The Factory Page
+
+`factory.html` is a stand-alone demo front end for pitching the idea: an assembly line where blog posts ride a conveyor through the stations and finished posts come off the line. It runs on baked demo data (real Bloom generations for the example brand); open the file in a browser and watch. It is a visualization, not a client for the workflow; a refresh of this page to mirror the reworked workflow ships separately.
 
 ## Verification
 
-1. Import `workflow.json`, create the two Header Auth credentials, and select them in the HTTP nodes (Bloom credential in 3 nodes, Anthropic in 2).
-2. Paste your brand id into `brand_session_id` in the **Brand config** node.
-3. Click **Execute workflow** and confirm the full chain runs green.
-4. Check the demo post in **Adopt demo post**'s output actually fits your brand, then download `content-cards.zip` from the **Package ZIP** node, extract it, and open `preview.html`: the blog post plus the Instagram (4:5), LinkedIn (1:1), and X (16:9) mockups should show the 4 on-brand images with legible headlines and their captions in place.
+1. Import `workflow.json`, create the Header Auth credential, and select it in the 4 Bloom HTTP nodes.
+2. Click **Execute workflow**, open the form, and paste a real blog post with three captions.
+3. Pick a brand on the second form page and wait for the run to finish.
+4. The browser tab should render the outputs: blog post plus the Instagram (4:5), LinkedIn (1:1), and X (16:9) mockups with the 4 on-brand images, legible headlines, and your captions exactly as you wrote them. Then download `content-cards.zip` from the **Zip the outputs (content-cards.zip)** node, extract it, and open `preview.html`: same page, self-contained.
