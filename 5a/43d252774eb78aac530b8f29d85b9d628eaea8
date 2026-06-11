@@ -1,0 +1,34 @@
+n8n-content-repurposing/factory.html
+  s_9d0b025f573427::t_205ea2557bbcc3 848,853-855,859,864-866,870,877-881,894,900,902-903,906-914
+  s_9d0b025f573427::t_3632bdca3e8865 477,507,510-512,518-530
+  s_9d0b025f573427::t_be7cf475b981fb 506
+  s_9d0b025f573427::t_2069de4607ed1d 683-685,689-696
+  s_9d0b025f573427::t_894d7f3a67ce5b 667-668,671-672
+  s_9d0b025f573427::t_5b4bb28b3df15d 202-203,205-220,227-229,232-236
+  s_9d0b025f573427::t_ccee5af3b72c2e 319-321,323-324,326,329-334,336
+  s_9d0b025f573427::t_ca48d6aa3ecc9a 91-92
+  s_9d0b025f573427::t_0b6ff4fc99f395 261-262
+  s_9d0b025f573427::t_0d598060cd2f5e 604,622-625
+  s_9d0b025f573427::t_45807e0d9d32ff 702-712
+  s_9d0b025f573427::t_03b25352dfaf82 650-651,653-654,656,661,663-665
+  s_9d0b025f573427::t_afb5b5f21b1027 341
+  s_9d0b025f573427::t_aeaeab43b52438 392-393,398,402-403,411,415,419-420,424,429-430,432,443-474
+  s_9d0b025f573427::t_ded753fb07015a 478-479
+  s_9d0b025f573427::t_a2f0902175d81f 231
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "5a43d252774eb78aac530b8f29d85b9d628eaea8",
+  "prompts": {},
+  "sessions": {
+    "s_9d0b025f573427": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ba0b45a0-fafe-4ab1-afbe-745d7aa9aba8",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Tomas Ward <tomas@familiaward.com.ar>"
+    }
+  }
+}
