@@ -1,46 +1,150 @@
 {
-  "name": "Bloom: Content repurposing (blog → main image + 3 socials)",
+  "name": "Bloom: Content repurposing (blog post → on-brand images for every channel)",
   "nodes": [
     {
-      "parameters": {},
-      "id": "c0a00000-0000-4000-8000-000000000001",
-      "name": "When clicking 'Execute workflow'",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [-460, 300]
-    },
-    {
       "parameters": {
-        "assignments": {
-          "assignments": [
+        "formTitle": "Repurpose a blog post",
+        "formDescription": "Paste a finished blog post and the captions you already wrote for each platform. Bloom generates the on-brand image for every channel; your copy is never rewritten.",
+        "formFields": {
+          "values": [
             {
-              "id": "a0000000-0000-4000-8000-000000000014",
-              "name": "brand_session_id",
-              "value": "REPLACE_WITH_YOUR_BRAND_SESSION_ID",
-              "type": "string"
+              "fieldLabel": "Blog title",
+              "placeholder": "The title of the published blog post",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Blog body",
+              "fieldType": "textarea",
+              "placeholder": "The full blog post text (plain text)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Instagram caption",
+              "fieldType": "textarea",
+              "placeholder": "The caption that will be published with the Instagram post",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "LinkedIn caption",
+              "fieldType": "textarea",
+              "placeholder": "The caption that will be published with the LinkedIn post",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Twitter/X caption",
+              "fieldType": "textarea",
+              "placeholder": "The tweet that will be published with the image",
+              "requiredField": true
             }
           ]
         },
-        "options": {}
+        "options": {
+          "buttonLabel": "Continue"
+        }
       },
-      "id": "c0a00000-0000-4000-8000-000000000002",
-      "name": "Brand config",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [-240, 300]
+      "id": "c0a00000-0000-4000-8000-000000000001",
+      "name": "Form: paste your post + captions",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -460,
+        300
+      ],
+      "webhookId": "c0a00000-0000-4000-8000-00000000f0f0"
     },
     {
       "parameters": {
-        "url": "={{ (() => { const b = $json.brand_session_id; if (!b || b.startsWith('REPLACE_WITH')) { throw new Error('Set your Bloom brand id in the \"Brand config\" node (brand_session_id field). See the README Setup section.'); } return 'https://www.trybloom.ai/api/v1/brands/' + b; })() }}",
+        "url": "https://www.trybloom.ai/api/v1/brands?limit=50",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
-      "id": "c0a00000-0000-4000-8000-00000000000d",
-      "name": "Bloom: get brand",
+      "id": "c0a00000-0000-4000-8000-000000000002",
+      "name": "Bloom: fetch your brands",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-20, 300],
+      "position": [
+        -240,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
+          "name": "Bloom API key (x-api-key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// The Form node's expression sandbox can't run real code (no Error constructor,\n// no throw), so the dropdown is built here in a Code node and the form page\n// just reads the finished JSON string.\nconst d = $input.first().json.data || {};\n// Brand statuses: analyzing | ready | logo_required | failed. Only 'ready' can generate.\nconst brands = (d.brands || []).filter((b) => !b.status || b.status === 'ready');\nif (!brands.length) {\n  throw new Error('No ready brands on this Bloom account. Create one at https://www.trybloom.ai/brands, wait for onboarding to finish, then run again.');\n}\nreturn [{\n  json: {\n    formFieldsJson: JSON.stringify([{\n      fieldLabel: 'Brand',\n      fieldType: 'dropdown',\n      requiredField: true,\n      fieldOptions: {\n        values: brands.map((b) => ({ option: (b.name || b.url || 'Unnamed brand') + ' (' + b.id + ')' })),\n      },\n    }]),\n  },\n}];\n"
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000f",
+      "name": "Build brand dropdown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "defineForm": "json",
+        "jsonOutput": "={{ $('Build brand dropdown').first().json.formFieldsJson }}",
+        "options": {
+          "formTitle": "Pick your brand",
+          "buttonLabel": "Generate 4 images (~2 min)",
+          "formDescription": "Submitting starts the generation: 4 on-brand images, one per channel. The button will keep loading while they render (about 2 minutes); the results page opens in this tab when done. Live node-by-node progress is visible in the n8n editor tab."
+        }
+      },
+      "id": "c0a00000-0000-4000-8000-000000000003",
+      "name": "Form: pick your brand",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "c0a00000-0000-4000-8000-00000000f0f1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine the submitted blog post with the brand picked on the second form\n// page. The blog text and the platform captions are the user's own copy and\n// flow through untouched: this workflow only generates the images.\nconst sel = String($input.first().json['Brand'] || '');\nconst m = sel.match(/\\(([^()]+)\\)\\s*$/);\nif (!m) {\n  throw new Error('Could not read the brand id from the dropdown value: ' + sel);\n}\nconst brandId = m[1];\nconst d = $('Bloom: fetch your brands').first().json.data || {};\nconst brand = (d.brands || []).find((b) => b.id === brandId) || {};\nconst form = $('Form: paste your post + captions').first().json;\nreturn [{\n  json: {\n    brand_session_id: brandId,\n    brand_name: brand.name || 'Your brand',\n    title: form['Blog title'],\n    body: form['Blog body'],\n    captions: {\n      instagram: form['Instagram caption'] || '',\n      linkedin: form['LinkedIn caption'] || '',\n      twitter: form['Twitter/X caption'] || '',\n    },\n  },\n}];\n"
+      },
+      "id": "c0a00000-0000-4000-8000-000000000004",
+      "name": "Normalize input (post + brand id)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.trybloom.ai/api/v1/images/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"brandSessionId\": {{ JSON.stringify($('Normalize input (post + brand id)').first().json.brand_session_id) }},\n  \"query\": {{ JSON.stringify(String($('Normalize input (post + brand id)').first().json.title || '').slice(0, 500)) }},\n  \"limit\": 8\n}",
+        "options": {}
+      },
+      "id": "c0a00000-0000-4000-8000-000000000005",
+      "name": "Bloom: search reference images",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput",
+      "position": [
+        640,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
@@ -50,93 +154,16 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-fable-5\",\n  \"max_tokens\": 4000,\n  \"tools\": [\n    {\n      \"type\": \"web_search_20260209\",\n      \"name\": \"web_search\",\n      \"max_uses\": 2\n    },\n    {\n      \"name\": \"write_post\",\n      \"description\": \"Submit the final demo blog post for the brand. Always finish by calling this tool.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": { \"type\": \"string\", \"description\": \"Blog post title.\" },\n          \"body\": { \"type\": \"string\", \"description\": \"Blog post body, 150-250 words, plain text, no markdown.\" }\n        },\n        \"required\": [\"title\", \"body\"]\n      }\n    }\n  ],\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify((() => { const d = ($json.data || {}); const brand = d.brand || d; return \"Research the brand \\\"\" + (brand.name || \"this brand\") + \"\\\"\" + (brand.url ? \" (website: \" + brand.url + \")\" : \"\") + \" with web search: check their site and any recent news, launches, or announcements. Then write a short blog post (150-250 words) that could appear on that brand's blog today, about one specific, recent, real topic you found (a product, launch, event, or concrete theme their audience cares about right now). Be explicit: use real product names, features, and dates from your research, and do not state anything you did not verify. Write in the brand's voice, plain text only, no markdown headings or lists. When you are done you MUST call the write_post tool with the final title and body; never answer in plain text.\"; })()) }}\n    }\n  ]\n}",
-        "options": {}
+        "jsCode": "// No LLM in the loop: each platform's image brief is a fixed template that\n// describes that platform's audience and composition, with the user's own\n// copy (title + caption) injected as subject matter. The in-image headline\n// is the blog title, so even the words inside the image are the user's.\nconst post = $('Normalize input (post + brand id)').first().json;\n\n// Render guidance appended to every image prompt. Brand styling (colors, typography,\n// aesthetic) is deliberately not prompted: Bloom's brand layer applies it via brandSessionId,\n// and restating it in the prompt duplicates or fights that layer.\nconst BRAND_GUIDANCE =\n  'Render the headline inside the image, bold and legible. ' +\n  'One clear focal point.';\n\nconst SCENES = {\n  main: 'A wide editorial hero image for the blog post itself. Depict the single most concrete subject of the post (an object, place, or process named in it), composed with clear space for the headline. Photograph or illustration.',\n  instagram: 'A single-subject close-up for an Instagram feed: one object or moment from the post, framed tight and vertical, instantly readable at thumbnail size between personal photos.',\n  linkedin: 'A square composition for a LinkedIn audience reading in a professional context: the subject of the post shown in its work or process setting, like a still from a well-shot documentary about the craft.',\n  twitter: 'A bold, high-contrast composition for a fast-scrolling X timeline: one focal subject from the post, large in the frame, readable in half a second at small size.',\n};\n\n// Aspect ratio + output filename are assigned deterministically per platform.\n// Captions are the user's own copy from the form, passed through untouched.\nconst platforms = [\n  { platform: 'main',      aspectRatio: '16:9', basename: 'blog-main', caption: '' },\n  { platform: 'instagram', aspectRatio: '4:5',  basename: 'instagram', caption: post.captions.instagram },\n  { platform: 'linkedin',  aspectRatio: '1:1',  basename: 'linkedin',  caption: post.captions.linkedin },\n  { platform: 'twitter',   aspectRatio: '16:9', basename: 'twitter',   caption: post.captions.twitter },\n];\n\n// The blog hero has no caption, so it leans on the opening of the post instead.\nconst excerpt = String(post.body || '').replace(/\\s+/g, ' ').slice(0, 400);\n\nreturn platforms.map((p) => {\n  const copy = p.caption || excerpt;\n  return {\n    json: {\n      platform: p.platform,\n      aspectRatio: p.aspectRatio,\n      basename: p.basename,\n      headline: post.title,\n      caption: p.caption,\n      image_prompt:\n        SCENES[p.platform] +\n        '\\n\\nThe post this image accompanies (subject matter only, do not render this text):\\n\"' + copy + '\"\\n\\n' +\n        'Headline: \"' + post.title + '\".\\n' + BRAND_GUIDANCE,\n    },\n  };\n});\n"
       },
-      "id": "c0a00000-0000-4000-8000-00000000000e",
-      "name": "Write demo post (Claude)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 5000,
-      "position": [200, 300],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_WITH_YOUR_ANTHROPIC_CREDENTIAL",
-          "name": "Anthropic API key (x-api-key)"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Shape Claude's demo post like a real blog source would: downstream only needs\n// title, body, url, author. In production, delete the demo-post nodes and have\n// your real source (RSS, webhook, CMS) emit these same fields.\nconst msg = $input.first().json;\nconst toolUse = (msg.content || []).find((block) => block.type === 'tool_use' && block.name === 'write_post');\nif (!toolUse || !toolUse.input) {\n  throw new Error('Claude did not return a write_post tool_use block (stop_reason: ' + (msg.stop_reason || 'unknown') + '). Re-run the workflow.');\n}\nconst d = $('Bloom: get brand').first().json.data || {};\nconst brand = d.brand || d;\nreturn [{\n  json: {\n    title: toolUse.input.title,\n    body: toolUse.input.body,\n    url: brand.url || '',\n    author: brand.name || 'Demo author',\n  },\n}];\n"
-      },
-      "id": "c0a00000-0000-4000-8000-00000000000f",
-      "name": "Adopt demo post",
+      "id": "c0a00000-0000-4000-8000-000000000007",
+      "name": "Construct image prompts (1 per platform)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [420, 300]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"claude-fable-5\",\n  \"max_tokens\": 4000,\n  \"tools\": [\n    {\n      \"name\": \"plan_content\",\n      \"description\": \"Plan on-brand repurposed content for a blog post across a main blog image and three social platforms.\",\n      \"input_schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"main\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short headline for the main blog image.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the main blog image: subject, composition, and medium only.\" }\n            },\n            \"required\": [\"headline\", \"image_prompt\"]\n          },\n          \"instagram\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"Instagram caption adapted to the audience, conversational, with a few relevant hashtags.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the Instagram image: subject, composition, and medium only.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          },\n          \"linkedin\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"LinkedIn caption with a professional, insight-driven tone.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the LinkedIn image: subject, composition, and medium only.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          },\n          \"twitter\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"headline\": { \"type\": \"string\", \"description\": \"Short in-image headline.\" },\n              \"caption\": { \"type\": \"string\", \"description\": \"Concise tweet under 280 characters.\" },\n              \"image_prompt\": { \"type\": \"string\", \"description\": \"Visual description for the Twitter/X image: subject, composition, and medium only.\" }\n            },\n            \"required\": [\"headline\", \"caption\", \"image_prompt\"]\n          }\n        },\n        \"required\": [\"main\", \"instagram\", \"linkedin\", \"twitter\"]\n      }\n    }\n  ],\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\"You are a brand marketing assistant. Repurpose the following blog post into on-brand visual content. Produce a main blog image plan plus a caption and image plan for Instagram, LinkedIn, and Twitter/X. Adapt each caption to that platform's audience and tone.\\n\\nImage prompt rules: describe only the subject (what is in the frame), the composition (how it is arranged), and optionally the medium (photograph, illustration, 3D render). Do not use aesthetic adjectives such as sleek, modern, premium, minimalist, or futuristic, and do not describe colors, fonts, or visual style; the brand layer applies all styling on its own, so style words either duplicate it or fight it. Avoid generic person-at-a-laptop or team-in-an-office scenes. Negative constraints (such as no humans, no UI mockups) are allowed and useful.\\n\\nHeadline rules: take a position instead of listing attributes, prefer concrete numbers over vague claims, and write in the register of that platform's audience rather than marketing-speak. Keep every headline short enough to render legibly inside an image.\\n\\nReturn the result by calling the plan_content tool with the complete plan; never answer in plain text.\\n\\nBlog title: \" + $json.title + \"\\nAuthor: \" + ($json.author || \"unknown\") + \"\\nURL: \" + ($json.url || \"\") + \"\\n\\nBlog body:\\n\" + $json.body) }}\n    }\n  ]\n}",
-        "options": {}
-      },
-      "id": "c0a00000-0000-4000-8000-000000000003",
-      "name": "Plan content (Claude)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 5000,
-      "position": [640, 300],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_WITH_YOUR_ANTHROPIC_CREDENTIAL",
-          "name": "Anthropic API key (x-api-key)"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Read Claude's structured tool_use output (guaranteed JSON, no text parsing)\nconst msg = $input.first().json;\nconst toolUse = (msg.content || []).find((block) => block.type === 'tool_use' && block.name === 'plan_content');\nif (!toolUse || !toolUse.input) {\n  throw new Error('Claude did not return a plan_content tool_use block (stop_reason: ' + (msg.stop_reason || 'unknown') + '). Re-run the workflow.');\n}\nconst plan = toolUse.input;\n\n// Render guidance appended to every image prompt. Brand styling (colors, typography,\n// aesthetic) is deliberately not prompted: Bloom's brand layer applies it via brandSessionId,\n// and restating it in the prompt duplicates or fights that layer.\nconst BRAND_GUIDANCE =\n  'Render the headline inside the image, bold and legible. ' +\n  'One clear focal point. No fine print, no placeholder text, no watermark, no busy layout.';\n\n// Aspect ratio + output filename are assigned deterministically per platform.\nconst platforms = [\n  { platform: 'main',      aspectRatio: '16:9', basename: 'blog-main', plan: plan.main },\n  { platform: 'instagram', aspectRatio: '4:5',  basename: 'instagram', plan: plan.instagram },\n  { platform: 'linkedin',  aspectRatio: '1:1',  basename: 'linkedin',  plan: plan.linkedin },\n  { platform: 'twitter',   aspectRatio: '16:9', basename: 'twitter',   plan: plan.twitter },\n];\n\nreturn platforms.map((p) => {\n  if (!p.plan) {\n    throw new Error(`Claude plan is missing the \"${p.platform}\" section.`);\n  }\n  return {\n    json: {\n      platform: p.platform,\n      aspectRatio: p.aspectRatio,\n      basename: p.basename,\n      headline: p.plan.headline,\n      caption: p.plan.caption || '',\n      image_prompt: `${p.plan.image_prompt}\\n\\nHeadline: \"${p.plan.headline}\".\\n${BRAND_GUIDANCE}`,\n    },\n  };\n});\n"
-      },
-      "id": "c0a00000-0000-4000-8000-000000000004",
-      "name": "Build platform jobs",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [860, 300]
+      "position": [
+        860,
+        300
+      ]
     },
     {
       "parameters": {
@@ -146,17 +173,20 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ (() => { const b = $('Brand config').first().json.brand_session_id; if (!b || b.startsWith('REPLACE_WITH')) { throw new Error('Set your Bloom brand id in the \"Brand config\" node (brand_session_id field). See the README Setup section.'); } return JSON.stringify(b); })() }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
+        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"brandSessionId\": {{ JSON.stringify($('Normalize input (post + brand id)').first().json.brand_session_id) }},\n  \"referenceImageIds\": {{ JSON.stringify((() => { try { const imgs = (($('Bloom: search reference images').first().json.data || {}).candidates || []); return imgs.slice(0, 4).map((i) => i.id); } catch (e) { return []; } })()) }},\n  \"model\": \"pro\",\n  \"variantCount\": 1,\n  \"imageSize\": \"2K\",\n  \"aspectRatio\": {{ JSON.stringify($json.aspectRatio) }}\n}",
         "options": {}
       },
-      "id": "c0a00000-0000-4000-8000-000000000005",
-      "name": "Bloom: generate",
+      "id": "c0a00000-0000-4000-8000-000000000008",
+      "name": "Bloom: generate images",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "position": [1080, 300],
+      "position": [
+        1080,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
@@ -173,14 +203,17 @@
           "timeout": 300000
         }
       },
-      "id": "c0a00000-0000-4000-8000-000000000006",
-      "name": "Bloom: wait",
+      "id": "c0a00000-0000-4000-8000-000000000009",
+      "name": "Bloom: wait until ready",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "position": [1300, 300],
+      "position": [
+        1300,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_YOUR_BLOOM_CREDENTIAL",
@@ -199,34 +232,43 @@
           }
         }
       },
-      "id": "c0a00000-0000-4000-8000-000000000007",
-      "name": "Download image",
+      "id": "c0a00000-0000-4000-8000-00000000000a",
+      "name": "Download finished images",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "position": [1520, 300]
+      "position": [
+        1520,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Label each downloaded image with its platform filename, then merge ALL images\n// into ONE item: the Compression node runs once per item, so 4 items would\n// produce 4 zips. One item with 4 binaries produces the single zip we want.\nconst files = [];\nconst binary = {};\n$input.all().forEach((item, i) => {\n  // itemMatching follows n8n's item pairing instead of assuming index alignment,\n  // so labels stay correct even if an upstream node drops or reorders items.\n  const job = $('Build platform jobs').itemMatching(i).json;\n  if (!job || !job.basename) {\n    throw new Error(`Could not pair downloaded image #${i} with its platform job.`);\n  }\n  const bin = item.binary.data;\n  // The file extension follows the format Bloom actually served, not a hardcoded .png.\n  const ext = (bin.fileExtension || (bin.mimeType || '').split('/')[1] || 'png').replace('jpeg', 'jpg');\n  const filename = `${job.basename}.${ext}`;\n  bin.fileName = filename;\n  binary[job.basename] = bin;\n  files.push({\n    platform: job.platform,\n    filename,\n    aspectRatio: job.aspectRatio,\n    headline: job.headline,\n    caption: job.caption,\n  });\n});\nreturn [{ json: { files }, binary }];\n"
+        "jsCode": "// Label each downloaded image with its platform filename, then merge ALL images\n// into ONE item: the Compression node runs once per item, so 4 items would\n// produce 4 zips. One item with 4 binaries produces the single zip we want.\nconst files = [];\nconst binary = {};\n$input.all().forEach((item, i) => {\n  // itemMatching follows n8n's item pairing instead of assuming index alignment,\n  // so labels stay correct even if an upstream node drops or reorders items.\n  const job = $('Construct image prompts (1 per platform)').itemMatching(i).json;\n  if (!job || !job.basename) {\n    throw new Error(`Could not pair downloaded image #${i} with its platform job.`);\n  }\n  const bin = item.binary.data;\n  // The file extension follows the format Bloom actually served, not a hardcoded .png.\n  const ext = (bin.fileExtension || (bin.mimeType || '').split('/')[1] || 'png').replace('jpeg', 'jpg');\n  const filename = `${job.basename}.${ext}`;\n  bin.fileName = filename;\n  binary[job.basename] = bin;\n  // Bloom's hosted URL rides along so the in-browser result page can render the images.\n  let imageUrl = '';\n  try { imageUrl = $('Bloom: wait until ready').itemMatching(i).json.data.imageUrl || ''; } catch (e) {}\n  files.push({\n    platform: job.platform,\n    filename,\n    aspectRatio: job.aspectRatio,\n    headline: job.headline,\n    caption: job.caption,\n    imageUrl,\n  });\n});\nreturn [{ json: { files }, binary }];\n"
       },
-      "id": "c0a00000-0000-4000-8000-000000000008",
-      "name": "Label files",
+      "id": "c0a00000-0000-4000-8000-00000000000b",
+      "name": "Collect + name the 4 files",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1740, 300]
+      "position": [
+        1740,
+        300
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Render preview.html: the blog post plus realistic Instagram/LinkedIn/X mockups\n// with the generated images and captions in place. It ships inside the zip and\n// references the images by filename, so it works as soon as the zip is extracted.\nconst item = $input.first();\nconst files = item.json.files || [];\n\n// The blog text comes from the demo nodes. If you wired in a real source,\n// point this lookup at your source node; otherwise the blog text is skipped.\nlet post = {};\ntry { post = $('Adopt demo post').first().json; } catch (e) {}\n\nconst brand = post.author || 'Your brand';\nconst handle = (brand.toLowerCase().replace(/[^a-z0-9]/g, '') || 'yourbrand');\nconst esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\nconst byPlatform = Object.fromEntries(files.map((f) => [f.platform, f]));\nconst main = byPlatform.main || {};\nconst ig = byPlatform.instagram || {};\nconst li = byPlatform.linkedin || {};\nconst tw = byPlatform.twitter || {};\nconst initial = esc((brand[0] || 'B').toUpperCase());\nconst today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });\nconst paragraphs = String(post.body || '').split(/\\n+/).filter(Boolean).map((p) => `<p>${esc(p)}</p>`).join('');\n\n// Stroke icons keep the action rows looking native without shipping image assets.\nconst icon = (d, size) => `<svg viewBox='0 0 24 24' width='${size}' height='${size}' fill='none' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='${d}'/></svg>`;\nconst I = {\n  heart: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z',\n  comment: 'M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.9-.9L3 21l1.9-5.6a8.4 8.4 0 1 1 16.1-3.9z',\n  send: 'M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z',\n  bookmark: 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z',\n  thumb: 'M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3',\n  repeat: 'M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3',\n  chart: 'M18 20V10M12 20V4M6 20v-6',\n  share: 'M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13',\n};\nconst verified = \"<svg viewBox='0 0 22 22' width='17' height='17' fill='#1d9bf0' style='flex:none'><path d='M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z'/></svg>\";\n\nconst html = `<!doctype html>\n<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>\n<title>${esc(brand)} content preview</title>\n<style>\nbody{margin:0;background:#eef0f3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f1419;-webkit-font-smoothing:antialiased}\n.wrap{max-width:600px;margin:0 auto;padding:48px 16px 60px}\nheader{text-align:center;margin-bottom:42px}\nheader .k{font-size:12px;color:#65676b;letter-spacing:.08em;text-transform:uppercase}\nheader .b{font-size:28px;font-weight:800;margin-top:4px}\n.label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#65676b;margin:0 2px 8px}\nsection{margin-bottom:46px}\n.av{border-radius:50%;background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}\n.blog{background:#fff;border:1px solid #e6e6e6;border-radius:10px;overflow:hidden}\n.blog .inner{padding:30px 34px 10px}\n.blog .kick{color:#888;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}\n.blog h1{font-family:Georgia,'Times New Roman',serif;font-size:31px;line-height:1.2;margin:10px 0 14px;font-weight:700}\n.blog .byline{display:flex;align-items:center;gap:10px;margin-bottom:22px}\n.blog .byline .av{width:36px;height:36px;font-size:14px}\n.blog .byline .who{font-size:13px;font-weight:600}\n.blog .byline .when{font-size:13px;color:#888}\n.blog img.ph{width:100%;display:block}\n.blog .body{font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.75;color:#222;padding:18px 34px 26px}\n.ig{background:#fff;border:1px solid #dbdbdb;border-radius:10px;overflow:hidden}\n.ig .head{display:flex;align-items:center;gap:10px;padding:10px 12px}\n.ig .ring{width:36px;height:36px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);flex:none;box-sizing:border-box}\n.ig .ring .av{width:100%;height:100%;font-size:13px;border:2px solid #fff;box-sizing:border-box}\n.ig .u{font-weight:600;font-size:14px}\n.ig .ago{color:#737373;font-size:14px}\n.ig .dots{margin-left:auto;font-weight:700;color:#262626;letter-spacing:1px}\n.ig img.ph{width:100%;display:block}\n.ig .acts{display:flex;align-items:center;gap:16px;padding:10px 14px 6px;color:#262626}\n.ig .acts .right{margin-left:auto;display:flex}\n.ig .likes{font-weight:600;font-size:14px;padding:0 14px}\n.ig .cap{font-size:14px;line-height:1.45;padding:4px 14px 0}\n.ig .muted{color:#737373;font-size:14px;padding:6px 14px 0}\n.ig .time{color:#737373;font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:8px 14px 14px}\n.li{background:#fff;border:1px solid #e6e6e6;border-radius:10px;overflow:hidden;font-size:14px}\n.li .head{display:flex;gap:10px;padding:14px 16px 4px}\n.li .av{width:48px;height:48px;font-size:18px;background:#0a66c2}\n.li .nm{font-weight:600;font-size:14px;color:#000}\n.li .meta{color:#666;font-size:12px;line-height:1.4}\n.li .follow{margin-left:auto;color:#0a66c2;font-weight:600;font-size:14px;white-space:nowrap}\n.li .txt{padding:8px 16px 12px;line-height:1.45;color:#181818}\n.li img.ph{width:100%;display:block}\n.li .proof{display:flex;align-items:center;gap:6px;padding:8px 16px;color:#666;font-size:12px;border-bottom:1px solid #ebebeb}\n.li .btns{display:flex;justify-content:space-around;padding:4px 8px 6px}\n.li .btn{display:flex;align-items:center;gap:7px;color:#5f6163;font-weight:600;font-size:13px;padding:10px 6px}\n.x{background:#000;border:1px solid #2f3336;border-radius:16px;padding:14px 16px;color:#e7e9ea;display:flex;gap:10px}\n.x .av{width:40px;height:40px;font-size:15px;background:#1d9bf0}\n.x .col{flex:1;min-width:0}\n.x .nm{display:flex;align-items:center;gap:4px;font-weight:700;font-size:15px}\n.x .vh{color:#71767b;font-weight:400}\n.x .dots{margin-left:auto;color:#71767b;letter-spacing:1px}\n.x .txt{font-size:15px;line-height:1.45;margin:2px 0 12px;white-space:pre-wrap}\n.x img.ph{width:100%;border-radius:16px;border:1px solid #2f3336;display:block}\n.x .acts{display:flex;justify-content:space-between;margin-top:12px;color:#71767b;font-size:13px;padding-right:24px}\n.x .acts span{display:flex;align-items:center;gap:7px}\nfooter{text-align:center;color:#9aa0a6;font-size:12px;margin-top:10px}\n</style></head><body><div class='wrap'>\n<header><div class='k'>On-brand content preview</div><div class='b'>${esc(brand)}</div></header>\n\n<section>\n<div class='label'>Blog post</div>\n<article class='blog'>\n<div class='inner'>\n<div class='kick'>From the ${esc(brand)} blog</div>\n<h1>${esc(post.title || main.headline || '')}</h1>\n<div class='byline'><div class='av'>${initial}</div><div><div class='who'>${esc(brand)}</div><div class='when'>${today} &middot; 3 min read</div></div></div>\n</div>\n${main.filename ? `<img class='ph' src='${esc(main.filename)}'>` : ''}\n<div class='body'>${paragraphs}</div>\n</article>\n</section>\n\n<section>\n<div class='label'>Instagram</div>\n<article class='ig'>\n<div class='head'><div class='ring'><div class='av'>${initial}</div></div><span class='u'>${esc(handle)}</span><span class='ago'>&middot; 2h</span><span class='dots'>&middot;&middot;&middot;</span></div>\n${ig.filename ? `<img class='ph' src='${esc(ig.filename)}'>` : ''}\n<div class='acts'>${icon(I.heart, 24)}${icon(I.comment, 24)}${icon(I.send, 24)}<span class='right'>${icon(I.bookmark, 24)}</span></div>\n<div class='likes'>1,248 likes</div>\n<div class='cap'><b>${esc(handle)}</b> ${esc(ig.caption || '')}</div>\n<div class='muted'>View all 36 comments</div>\n<div class='time'>2 hours ago</div>\n</article>\n</section>\n\n<section>\n<div class='label'>LinkedIn</div>\n<article class='li'>\n<div class='head'><div class='av'>${initial}</div><div><div class='nm'>${esc(brand)}</div><div class='meta'>12,847 followers<br>1h &middot; &#127760;</div></div><span class='follow'>+ Follow</span></div>\n<div class='txt'>${esc(li.caption || '')}</div>\n${li.filename ? `<img class='ph' src='${esc(li.filename)}'>` : ''}\n<div class='proof'><span>&#128077;&#10084;&#65039;&#128161;</span><span>Mart&iacute;n Su&aacute;rez and 86 others</span><span style='margin-left:auto'>12 comments &middot; 4 reposts</span></div>\n<div class='btns'>\n<span class='btn'>${icon(I.thumb, 18)} Like</span>\n<span class='btn'>${icon(I.comment, 18)} Comment</span>\n<span class='btn'>${icon(I.repeat, 18)} Repost</span>\n<span class='btn'>${icon(I.send, 18)} Send</span>\n</div>\n</article>\n</section>\n\n<section>\n<div class='label'>Twitter / X</div>\n<article class='x'>\n<div class='av'>${initial}</div>\n<div class='col'>\n<div class='nm'><span>${esc(brand)}</span>${verified}<span class='vh'>@${esc(handle)} &middot; 2h</span><span class='dots'>&middot;&middot;&middot;</span></div>\n<div class='txt'>${esc(tw.caption || '')}</div>\n${tw.filename ? `<img class='ph' src='${esc(tw.filename)}'>` : ''}\n<div class='acts'>\n<span>${icon(I.comment, 18)} 18</span>\n<span>${icon(I.repeat, 18)} 64</span>\n<span>${icon(I.heart, 18)} 412</span>\n<span>${icon(I.chart, 18)} 12.7K</span>\n<span style='gap:14px'>${icon(I.bookmark, 18)}${icon(I.share, 18)}</span>\n</div>\n</div>\n</article>\n</section>\n\n<footer>Generated with Bloom + n8n</footer>\n</div></body></html>`;\n\nconst binary = { ...item.binary };\nbinary.preview = await this.helpers.prepareBinaryData(Buffer.from(html, 'utf8'), 'preview.html', 'text/html');\nreturn [{ json: item.json, binary }];\n"
+        "jsCode": "// Render the campaign preview twice from the same markup:\n//  - preview.html (ships inside the zip, references the images by filename)\n//  - hostedPreviewHtml (shown in the browser by the final form page, uses\n//    Bloom's hosted image URLs so it needs no local files)\nconst item = $input.first();\nconst files = item.json.files || [];\nconst post = $('Normalize input (post + brand id)').first().json;\n\nconst brand = post.brand_name || 'Your brand';\nconst handle = (brand.toLowerCase().replace(/[^a-z0-9]/g, '') || 'yourbrand');\nconst esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\nconst byPlatform = Object.fromEntries(files.map((f) => [f.platform, f]));\nconst main = byPlatform.main || {};\nconst ig = byPlatform.instagram || {};\nconst li = byPlatform.linkedin || {};\nconst tw = byPlatform.twitter || {};\nconst initial = esc((brand[0] || 'B').toUpperCase());\nconst today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });\nconst paragraphs = String(post.body || '').split(/\\n+/).filter(Boolean).map((p) => `<p>${esc(p)}</p>`).join('');\n\n// Stroke icons keep the action rows looking native without shipping image assets.\nconst icon = (d, size) => `<svg viewBox='0 0 24 24' width='${size}' height='${size}' fill='none' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='${d}'/></svg>`;\nconst I = {\n  heart: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z',\n  comment: 'M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.9-.9L3 21l1.9-5.6a8.4 8.4 0 1 1 16.1-3.9z',\n  send: 'M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z',\n  bookmark: 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z',\n  thumb: 'M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3',\n  repeat: 'M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3',\n  chart: 'M18 20V10M12 20V4M6 20v-6',\n  share: 'M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13',\n};\nconst verified = \"<svg viewBox='0 0 22 22' width='17' height='17' fill='#1d9bf0' style='flex:none'><path d='M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z'/></svg>\";\n\nconst css = `\nbody{margin:0;background:#eef0f3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f1419;-webkit-font-smoothing:antialiased}\n.wrap{max-width:600px;margin:0 auto;padding:48px 16px 60px;text-align:left}\n.wrap header{text-align:center;margin-bottom:42px}\n.wrap header .k{font-size:12px;color:#65676b;letter-spacing:.08em;text-transform:uppercase}\n.wrap header .b{font-size:28px;font-weight:800;margin-top:4px}\n.label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#65676b;margin:0 2px 8px}\n.wrap section{margin-bottom:46px}\n.av{border-radius:50%;background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}\n.blog{background:#fff;border:1px solid #e6e6e6;border-radius:10px;overflow:hidden}\n.blog .inner{padding:30px 34px 10px}\n.blog .kick{color:#888;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}\n.blog h1{font-family:Georgia,'Times New Roman',serif;font-size:31px;line-height:1.2;margin:10px 0 14px;font-weight:700}\n.blog .byline{display:flex;align-items:center;gap:10px;margin-bottom:22px}\n.blog .byline .av{width:36px;height:36px;font-size:14px}\n.blog .byline .who{font-size:13px;font-weight:600}\n.blog .byline .when{font-size:13px;color:#888}\n.blog img.ph{width:100%;display:block}\n.blog .body{font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.75;color:#222;padding:18px 34px 26px}\n.ig{background:#fff;border:1px solid #dbdbdb;border-radius:10px;overflow:hidden}\n.ig .head{display:flex;align-items:center;gap:10px;padding:10px 12px}\n.ig .ring{width:36px;height:36px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);flex:none;box-sizing:border-box}\n.ig .ring .av{width:100%;height:100%;font-size:13px;border:2px solid #fff;box-sizing:border-box}\n.ig .u{font-weight:600;font-size:14px}\n.ig .ago{color:#737373;font-size:14px}\n.ig .dots{margin-left:auto;font-weight:700;color:#262626;letter-spacing:1px}\n.ig img.ph{width:100%;display:block}\n.ig .acts{display:flex;align-items:center;gap:16px;padding:10px 14px 6px;color:#262626}\n.ig .acts .right{margin-left:auto;display:flex}\n.ig .likes{font-weight:600;font-size:14px;padding:0 14px}\n.ig .cap{font-size:14px;line-height:1.45;padding:4px 14px 0}\n.ig .muted{color:#737373;font-size:14px;padding:6px 14px 0}\n.ig .time{color:#737373;font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:8px 14px 14px}\n.li{background:#fff;border:1px solid #e6e6e6;border-radius:10px;overflow:hidden;font-size:14px}\n.li .head{display:flex;gap:10px;padding:14px 16px 4px}\n.li .av{width:48px;height:48px;font-size:18px;background:#0a66c2}\n.li .nm{font-weight:600;font-size:14px;color:#000}\n.li .meta{color:#666;font-size:12px;line-height:1.4}\n.li .follow{margin-left:auto;color:#0a66c2;font-weight:600;font-size:14px;white-space:nowrap}\n.li .txt{padding:8px 16px 12px;line-height:1.45;color:#181818}\n.li img.ph{width:100%;display:block}\n.li .proof{display:flex;align-items:center;gap:6px;padding:8px 16px;color:#666;font-size:12px;border-bottom:1px solid #ebebeb}\n.li .btns{display:flex;justify-content:space-around;padding:4px 8px 6px}\n.li .btn{display:flex;align-items:center;gap:7px;color:#5f6163;font-weight:600;font-size:13px;padding:10px 6px}\n.x{background:#000;border:1px solid #2f3336;border-radius:16px;padding:14px 16px;color:#e7e9ea;display:flex;gap:10px}\n.x .av{width:40px;height:40px;font-size:15px;background:#1d9bf0}\n.x .col{flex:1;min-width:0}\n.x .nm{display:flex;align-items:center;gap:4px;font-weight:700;font-size:15px}\n.x .vh{color:#71767b;font-weight:400}\n.x .dots{margin-left:auto;color:#71767b;letter-spacing:1px}\n.x .txt{font-size:15px;line-height:1.45;margin:2px 0 12px;white-space:pre-wrap}\n.x img.ph{width:100%;border-radius:16px;border:1px solid #2f3336;display:block}\n.x .acts{display:flex;justify-content:space-between;margin-top:12px;color:#71767b;font-size:13px;padding-right:24px}\n.x .acts span{display:flex;align-items:center;gap:7px}\n.wrap footer{text-align:center;color:#9aa0a6;font-size:12px;margin-top:10px}\nimg.ph{cursor:zoom-in}\n#lb{position:fixed;inset:0;background:rgba(12,9,16,.93);display:none;align-items:center;justify-content:center;z-index:9999;cursor:zoom-out}\n#lb.show{display:flex}\n#lb img{max-width:94vw;max-height:94vh;object-fit:contain}\n`;\n\n// Spotlight-style lightbox: click any image to view it full size (same src,\n// so no resolution is lost), click anywhere or press Escape to close.\nconst lightbox = `<div id='lb'><img alt=''></div>\\n<script>(function(){var lb=document.getElementById('lb');if(!lb)return;var im=lb.querySelector('img');document.querySelectorAll('img.ph').forEach(function(p){p.addEventListener('click',function(){im.src=p.src;lb.classList.add('show');});});lb.addEventListener('click',function(){lb.classList.remove('show');im.src='';});document.addEventListener('keydown',function(e){if(e.key==='Escape'){lb.classList.remove('show');im.src='';}});})();</scr` + `ipt>`;\n\n// One markup builder, two image sources: filenames for the zip, hosted URLs\n// for the in-browser result page.\nconst page = (src) => {\n  const img = (f, cls) => (src(f) ? `<img class='${cls}' src='${esc(src(f))}'>` : '');\n  return `\n<header><div class='k'>On-brand content preview</div><div class='b'>${esc(brand)}</div></header>\n\n<section>\n<div class='label'>Blog post</div>\n<article class='blog'>\n<div class='inner'>\n<div class='kick'>From the ${esc(brand)} blog</div>\n<h1>${esc(post.title || main.headline || '')}</h1>\n<div class='byline'><div class='av'>${initial}</div><div><div class='who'>${esc(brand)}</div><div class='when'>${today} &middot; 3 min read</div></div></div>\n</div>\n${img(main, 'ph')}\n<div class='body'>${paragraphs}</div>\n</article>\n</section>\n\n<section>\n<div class='label'>Instagram</div>\n<article class='ig'>\n<div class='head'><div class='ring'><div class='av'>${initial}</div></div><span class='u'>${esc(handle)}</span><span class='ago'>&middot; 2h</span><span class='dots'>&middot;&middot;&middot;</span></div>\n${img(ig, 'ph')}\n<div class='acts'>${icon(I.heart, 24)}${icon(I.comment, 24)}${icon(I.send, 24)}<span class='right'>${icon(I.bookmark, 24)}</span></div>\n<div class='likes'>1,248 likes</div>\n<div class='cap'><b>${esc(handle)}</b> ${esc(ig.caption || '')}</div>\n<div class='muted'>View all 36 comments</div>\n<div class='time'>2 hours ago</div>\n</article>\n</section>\n\n<section>\n<div class='label'>LinkedIn</div>\n<article class='li'>\n<div class='head'><div class='av'>${initial}</div><div><div class='nm'>${esc(brand)}</div><div class='meta'>12,847 followers<br>1h &middot; &#127760;</div></div><span class='follow'>+ Follow</span></div>\n<div class='txt'>${esc(li.caption || '')}</div>\n${img(li, 'ph')}\n<div class='proof'><span>&#128077;&#10084;&#65039;&#128161;</span><span>Mart&iacute;n Su&aacute;rez and 86 others</span><span style='margin-left:auto'>12 comments &middot; 4 reposts</span></div>\n<div class='btns'>\n<span class='btn'>${icon(I.thumb, 18)} Like</span>\n<span class='btn'>${icon(I.comment, 18)} Comment</span>\n<span class='btn'>${icon(I.repeat, 18)} Repost</span>\n<span class='btn'>${icon(I.send, 18)} Send</span>\n</div>\n</article>\n</section>\n\n<section>\n<div class='label'>Twitter / X</div>\n<article class='x'>\n<div class='av'>${initial}</div>\n<div class='col'>\n<div class='nm'><span>${esc(brand)}</span>${verified}<span class='vh'>@${esc(handle)} &middot; 2h</span><span class='dots'>&middot;&middot;&middot;</span></div>\n<div class='txt'>${esc(tw.caption || '')}</div>\n${img(tw, 'ph')}\n<div class='acts'>\n<span>${icon(I.comment, 18)} 18</span>\n<span>${icon(I.repeat, 18)} 64</span>\n<span>${icon(I.heart, 18)} 412</span>\n<span>${icon(I.chart, 18)} 12.7K</span>\n<span style='gap:14px'>${icon(I.bookmark, 18)}${icon(I.share, 18)}</span>\n</div>\n</div>\n</article>\n</section>\n\n<footer>Generated with Bloom + n8n</footer>`;\n};\n\nconst fullHtml = `<!doctype html>\n<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>\n<title>${esc(brand)} content preview</title>\n<style>${css}</style></head><body><div class='wrap'>${page((f) => f.filename)}</div>${lightbox}</body></html>`;\nconst hostedHtml = `<style>${css}</style><div class='wrap'>${page((f) => f.imageUrl || '')}</div>${lightbox}`;\n\nconst binary = { ...item.binary };\nbinary.preview = await this.helpers.prepareBinaryData(Buffer.from(fullHtml, 'utf8'), 'preview.html', 'text/html');\nreturn [{ json: { ...item.json, hostedPreviewHtml: hostedHtml }, binary }];\n"
       },
-      "id": "c0a00000-0000-4000-8000-000000000010",
-      "name": "Build preview page",
+      "id": "c0a00000-0000-4000-8000-00000000000c",
+      "name": "Render results preview (HTML)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1960, 300]
+      "position": [
+        1960,
+        300
+      ]
     },
     {
       "parameters": {
@@ -236,49 +278,178 @@
         "fileName": "content-cards.zip",
         "binaryPropertyOutput": "data"
       },
-      "id": "c0a00000-0000-4000-8000-000000000009",
-      "name": "Package ZIP",
+      "id": "c0a00000-0000-4000-8000-00000000000d",
+      "name": "Zip the outputs (content-cards.zip)",
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
-      "position": [2180, 300]
+      "position": [
+        2180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "={{ $('Render results preview (HTML)').first().json.hostedPreviewHtml }}",
+        "options": {
+          "formTitle": "Your results"
+        }
+      },
+      "id": "c0a00000-0000-4000-8000-00000000000e",
+      "name": "Form: show results in browser",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        2400,
+        300
+      ],
+      "webhookId": "c0a00000-0000-4000-8000-00000000f0f2"
     }
   ],
   "connections": {
-    "When clicking 'Execute workflow'": {
-      "main": [[{ "node": "Brand config", "type": "main", "index": 0 }]]
+    "Form: paste your post + captions": {
+      "main": [
+        [
+          {
+            "node": "Bloom: fetch your brands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Brand config": {
-      "main": [[{ "node": "Bloom: get brand", "type": "main", "index": 0 }]]
+    "Bloom: fetch your brands": {
+      "main": [
+        [
+          {
+            "node": "Build brand dropdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Bloom: get brand": {
-      "main": [[{ "node": "Write demo post (Claude)", "type": "main", "index": 0 }]]
+    "Form: pick your brand": {
+      "main": [
+        [
+          {
+            "node": "Normalize input (post + brand id)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Write demo post (Claude)": {
-      "main": [[{ "node": "Adopt demo post", "type": "main", "index": 0 }]]
+    "Normalize input (post + brand id)": {
+      "main": [
+        [
+          {
+            "node": "Bloom: search reference images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Adopt demo post": {
-      "main": [[{ "node": "Plan content (Claude)", "type": "main", "index": 0 }]]
+    "Bloom: search reference images": {
+      "main": [
+        [
+          {
+            "node": "Construct image prompts (1 per platform)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Plan content (Claude)": {
-      "main": [[{ "node": "Build platform jobs", "type": "main", "index": 0 }]]
+    "Construct image prompts (1 per platform)": {
+      "main": [
+        [
+          {
+            "node": "Bloom: generate images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Build platform jobs": {
-      "main": [[{ "node": "Bloom: generate", "type": "main", "index": 0 }]]
+    "Bloom: generate images": {
+      "main": [
+        [
+          {
+            "node": "Bloom: wait until ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Bloom: generate": {
-      "main": [[{ "node": "Bloom: wait", "type": "main", "index": 0 }]]
+    "Bloom: wait until ready": {
+      "main": [
+        [
+          {
+            "node": "Download finished images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Bloom: wait": {
-      "main": [[{ "node": "Download image", "type": "main", "index": 0 }]]
+    "Download finished images": {
+      "main": [
+        [
+          {
+            "node": "Collect + name the 4 files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Download image": {
-      "main": [[{ "node": "Label files", "type": "main", "index": 0 }]]
+    "Collect + name the 4 files": {
+      "main": [
+        [
+          {
+            "node": "Render results preview (HTML)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Label files": {
-      "main": [[{ "node": "Build preview page", "type": "main", "index": 0 }]]
+    "Render results preview (HTML)": {
+      "main": [
+        [
+          {
+            "node": "Zip the outputs (content-cards.zip)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Build preview page": {
-      "main": [[{ "node": "Package ZIP", "type": "main", "index": 0 }]]
+    "Zip the outputs (content-cards.zip)": {
+      "main": [
+        [
+          {
+            "node": "Form: show results in browser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build brand dropdown": {
+      "main": [
+        [
+          {
+            "node": "Form: pick your brand",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
