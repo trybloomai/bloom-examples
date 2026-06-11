@@ -58,16 +58,16 @@ Rename the credential first: click its name in the **top-left corner** of the di
 | **Name** | `x-api-key` |
 | **Value** | your Bloom API key |
 
-Save it. Now do the same in **Bloom: search reference images**, **Bloom: generate images**, and **Bloom: wait until ready**: open each node's **Header Auth** field and just **select "Bloom API key"** (don't make a new one).
+Save it. Now do the same in **Bloom: generate images** and **Bloom: wait until ready**: open each node's **Header Auth** field and just **select "Bloom API key"** (don't make a new one).
 
-> Tip: the nodes that still need a credential show a small **red triangle** ⚠️ on the canvas. When all four are gone, you're set. There is nothing else to configure: no other API keys, no brand id to paste, no placeholder fields.
+> Tip: the nodes that still need a credential show a small **red triangle** ⚠️ on the canvas. When all three are gone, you're set. There is nothing else to configure: no other API keys, no brand id to paste, no placeholder fields.
 
 ## How a Run Works
 
 1. **Form: paste your post + captions**: click **Execute workflow** and n8n opens the form. Paste your blog title, blog body, and the captions you already wrote for Instagram, LinkedIn, and Twitter/X. The workflow never rewrites them.
 2. **Form: pick your brand**: the workflow calls the Bloom API for your brand list and shows a second form page with a dropdown. Pick the brand; its id is extracted from the selection, so nothing is copied by hand.
 3. **Construct image prompts (1 per platform)** assembles four image briefs deterministically: a fixed scene template per platform (what reads well for that audience, at that size) plus your caption as subject matter and your blog title as the in-image headline. No LLM call, nothing generated: every word that ends up in or next to an image is yours.
-4. **Bloom: generate images → wait until ready → download** runs once per platform and produces 4 on-brand images. Up to 4 reference images ride along, picked by semantic search over your brand's library using the blog title as the query.
+4. **Bloom: generate images → wait until ready → download** runs once per platform and produces 4 on-brand images.
 5. **Your results, in the browser**: the final form page renders every output: the blog post with its new hero image, and the Instagram/LinkedIn/X posts with your captions and the generated images in place. **Zip the outputs (content-cards.zip)** also bundles `preview.html` (the same page, self-contained) plus the 4 labelled images into `content-cards.zip`, downloadable from that node's output in the canvas.
 
 ## What Each Platform Gets
@@ -99,15 +99,14 @@ The two form pages are a placeholder for wherever your posts actually come from.
  3  Build brand dropdown                    │ + a pinned brand id
  4  Form: pick your brand                   ┘
  5  Normalize input (post + brand id)       ← ADAPT: the contract (see below)
- 6  Bloom: search reference images          ┐
- 7  Construct image prompts (1 per platform)│
- 8  Bloom: generate images                  │
- 9  Bloom: wait until ready                 │ KEEP as is
-10  Download finished images                │
-11  Collect + name the 4 files              │
-12  Render results preview (HTML)           │
-13  Zip the outputs (content-cards.zip)     ┘
-14  Form: show results in browser           ← DELETE when automating (needs the
+ 6  Construct image prompts (1 per platform)┐
+ 7  Bloom: generate images                  │
+ 8  Bloom: wait until ready                 │
+ 9  Download finished images                │ KEEP as is
+10  Collect + name the 4 files              │
+11  Render results preview (HTML)           │
+12  Zip the outputs (content-cards.zip)     ┘
+13  Form: show results in browser           ← DELETE when automating (needs the
                                               form trigger); ship the zip instead
 ```
 
@@ -118,13 +117,11 @@ Everything from node 6 down only reads the object emitted by node 5, never the f
   captions: { instagram, linkedin, twitter } }
 ```
 
-Emit that, and nodes 6–13 run unchanged. Notes:
+Emit that, and nodes 6–12 run unchanged. Notes:
 
 - Your source must bring the captions (RSS doesn't have them; CMS custom fields do). Empty captions still generate images, the posts just ship without copy.
 - If your CMS body is HTML (WordPress's `content.rendered`), strip the tags in node 5: the prompts and the preview expect plain text.
 - Replace **Form: show results in browser** with wherever the zip goes next: Slack, Drive, your CMS.
-
-Keep **Bloom: search reference images**: it semantic-searches your brand's library (uploaded + scraped images) with the blog title as the query and passes the closest matches as generation references, which measurably improves the output. No relevant match, or the node deleted entirely: generation still works, just without references.
 
 To add or remove a platform, edit the `platforms` array and the `SCENES` templates in **Construct image prompts (1 per platform)**, and the form fields in **Form: paste your post + captions**. Aspect ratio, output file name, and the scene brief live next to each platform in that node.
 
@@ -132,7 +129,7 @@ To add or remove a platform, edit the `platforms` array and the `SCENES` templat
 
 - **The scene templates** in **Construct image prompts (1 per platform)** (`SCENES`) are where the per-platform art direction lives: what kind of composition reads on each channel. Edit them in plain English. One rule worth keeping: don't add style words (colors, fonts, "minimalist", "premium"): Bloom's brand layer applies your brand's styling on its own, and style words in the prompt duplicate or fight it.
 - **The in-image headline** is your blog title. If you want a different line inside a given image, change the `headline` assignment in **Construct image prompts (1 per platform)**.
-- **Want smarter briefs?** If you'd rather have an LLM tailor each scene to the specific post, insert one Claude tool-use call between **Bloom: search reference images** and **Construct image prompts (1 per platform)**: the git history of this template has a working version of exactly that node.
+- **Want smarter briefs?** If you'd rather have an LLM tailor each scene to the specific post, insert one Claude tool-use call between **Normalize input (post + brand id)** and **Construct image prompts (1 per platform)**: the git history of this template has a working version of exactly that node.
 
 ## Changing Models
 
