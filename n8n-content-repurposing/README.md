@@ -2,7 +2,7 @@
 
 Turn one finished blog post into an on-brand image for every channel, in one run.
 
-You already wrote the post and the captions; the on-brand image for each platform is the missing piece. This n8n workflow takes your post and captions through a form, lets you pick one of your Bloom brands from a dropdown, and calls Bloom to generate each platform's image at the right size with your blog title drawn on-brand inside it. No LLM in the loop: each image brief is a fixed per-platform template with your own copy injected. The run ends with the outputs rendered in your browser, plus a `content-cards.zip`.
+You already wrote the post and the captions; the on-brand image for each platform is the missing piece. This n8n workflow takes your post and captions through a form, lets you pick one of your Bloom brands from a dropdown, and calls Bloom to generate each platform's image at the right size and on-brand. No LLM in the loop: each image brief is a fixed per-platform template with your own copy injected. The run ends with the outputs rendered in your browser, plus a `content-cards.zip`.
 
 ```text
 form: blog post + captions -> pick your brand -> per-platform prompts -> Bloom generates -> results in your browser
